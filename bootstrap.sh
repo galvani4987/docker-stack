@@ -1,51 +1,58 @@
 #!/bin/bash
-
 echo "--- Iniciando Bootstrap do Servidor ---"
 
-# Garante que o script está sendo executado com privilégios de root
+# Verificar privilégios
 if [ "$EUID" -ne 0 ]; then
-  echo "Por favor, execute com sudo: sudo bash bootstrap.sh"
+  echo "Por favor, execute com sudo: sudo bash $0"
   exit 1
 fi
 
-echo "--> Atualizando pacotes do sistema..."
+# Atualizar sistema
+echo "> Atualizando pacotes..."
 apt-get update
+apt-get upgrade -y
 
-echo "--> Instalando dependências do host (Cockpit, htop, Docker se necessário)..."
-# Adiciona Docker aqui para garantir que ele esteja presente
-if ! command -v docker &> /dev/null
-then
-    echo "Docker não encontrado, instalando..."
-    apt-get install -y ca-certificates curl gnupg
-    install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-    chmod a+r /etc/apt/keyrings/docker.gpg
-    echo \
-      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-      $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-      tee /etc/apt/sources.list.d/docker.list > /dev/null
-    apt-get update
+# Instalar dependências essenciais
+echo "> Instalando dependências..."
+apt-get install -y git curl make htop ufw
+
+# Configurar UFW
+echo "> Configurando firewall..."
+ufw allow 22/tcp
+ufw allow 80/tcp
+ufw allow 443/tcp
+ufw -f enable
+
+# Instalar Docker
+if ! command -v docker &> /dev/null; then
+  echo "> Instalando Docker..."
+  curl -fsSL https://get.docker.com | sh
 fi
-apt-get install -y cockpit htop docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-echo "--> Habilitando serviço do Cockpit..."
+# Instalar Docker Compose
+if ! docker compose version &> /dev/null; then
+  echo "> Instalando Docker Compose Plugin..."
+  apt-get install -y docker-compose-plugin
+fi
+
+# Configurar usuário Docker
+echo "> Configurando usuário Docker..."
+usermod -aG docker ubuntu
+
+# Instalar Cockpit
+echo "> Instalando Cockpit..."
+apt-get install -y cockpit
 systemctl enable --now cockpit.socket
 
-echo "--> Configurando o ambiente do Docker Stack..."
-# Verifica se o .env existe. Se não, cria a partir do template.
-if [ ! -f .env ]; then
-  if [ -f .env.example ]; then
-    cp .env.example .env
-    echo "Arquivo .env criado a partir de .env.example."
-    echo "!!! AÇÃO NECESSÁRIA: Edite o arquivo .env e preencha suas senhas e segredos."
-  else
-    echo "AVISO: .env.example não encontrado. Pulando criação do .env."
-  fi
-else
-  echo "Arquivo .env já existe. Nenhuma ação necessária."
-fi
+# Criar estrutura de diretórios
+echo "> Criando estrutura de diretórios..."
+mkdir -p {config,data,scripts}
 
-# Dá permissão de execução ao próprio script
-chmod +x bootstrap.sh
+# Configurar ambiente
+echo "> Configurando ambiente..."
+[ ! -f .env ] && cp .env.example .env 2>/dev/null || echo ".env já existe"
+chmod +x *.sh scripts/*.sh 2>/dev/null
 
 echo "--- Bootstrap Concluído ---"
+echo "1. Edite o arquivo .env com suas configurações"
+echo "2. Execute 'docker compose up -d' para iniciar os serviços"

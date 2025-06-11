@@ -26,6 +26,28 @@ A pilha de serviços inclui:
 * **Waha:** API HTTP para integração com o WhatsApp, protegida pelo Authelia (Ex: `waha.galvani4987.duckdns.org`).
 * **Cockpit:** Interface para gerenciamento do servidor host (Acesso direto via `https://IP_DO_SERVIDOR:9090`).
 
+## 🛠️ Scripts de Gerenciamento
+
+Dois scripts essenciais para gerenciamento do servidor:
+
+### `bootstrap.sh`
+Prepara um novo servidor com todas as dependências necessárias:
+```bash
+sudo bash bootstrap.sh
+```
+
+### `clean-server.sh`
+Reseta completamente o servidor para estado limpo (removendo Docker, resetando firewall, etc.):
+```bash
+sudo bash clean-server.sh
+```
+
+### `manter_ativo.sh` (Cron Job)
+Script para manter serviços ativos (executado via cron):
+```bash
+0 * * * * /home/ubuntu/scripts/manter_ativo.sh
+```
+
 ## ⚙️ Implantação em um Novo Servidor
 
 Este repositório é projetado para uma implantação rápida e semi-automatizada.
@@ -45,28 +67,76 @@ Este repositório é projetado para uma implantação rápida e semi-automatizad
     ```
 
 2.  **Execute o Script de Bootstrap:**
-    Este script instalará dependências do servidor (como Cockpit) e preparará o ambiente.
+    Este script instalará dependências do servidor e preparará o ambiente:
     ```bash
     sudo bash bootstrap.sh
     ```
 
 3.  **Edite seus Segredos:**
-    O script de bootstrap criou o arquivo `.env`. Edite-o com suas senhas e tokens.
+    O script de bootstrap criou o arquivo `.env`. Edite-o com suas senhas e tokens:
     ```bash
     nano .env
     ```
 
 4.  **Inicie a Pilha Docker:**
-    Com tudo configurado, inicie todos os serviços.
+    Com tudo configurado, inicie todos os serviços:
     ```bash
     docker compose up -d
     ```
 
 5.  **Configurações Manuais Pós-Instalação:**
-    * **Cron Job (Keep-Alive):** Se desejar, configure o cron job para o script de atividade:
+    * **Cron Job (Keep-Alive):** Configure o cron job para o script de atividade:
         ```bash
-        # Abre o editor de cron jobs
         crontab -e
-        # Adicione a linha e salve:
+        # Adicione a linha:
         0 * * * * /home/ubuntu/scripts/manter_ativo.sh
         ```
+    * **Firewall Oracle Cloud:** Libere as portas 80 e 443 no painel da Oracle Cloud
+
+## 🔄 Gerenciamento Diário
+
+Comandos úteis para operação do sistema:
+
+| Comando | Descrição |
+|---------|-----------|
+| `docker compose up -d` | Iniciar todos os serviços |
+| `docker compose stop` | Parar todos os serviços |
+| `docker compose logs -f` | Ver logs em tempo real |
+| `docker compose pull` | Atualizar imagens dos serviços |
+| `sudo bash clean-server.sh` | Reset completo do servidor |
+| `sudo ufw status` | Verificar status do firewall |
+
+## 🚨 Troubleshooting
+
+Problemas comuns e soluções:
+
+1. **Certificados SSL não gerados:**
+   - Verifique se o DNS está apontando corretamente
+   - Confira os logs do Caddy: ```bash
+     docker compose logs caddy
+     ```
+
+2. **Autenticação falhando:**
+   - Verifique conexão com Redis: ```bash
+     docker compose logs redis authelia
+     ```
+   - Valide configurações no `authelia/configuration.yml`
+
+3. **Serviços não comunicando:**
+   - Verifique rede Docker: ```bash
+     docker network inspect app-network
+     ```
+   - Teste conectividade entre containers: ```bash
+     docker exec -it <container> ping <outro-container>
+     ```
+
+## 🤝 Contribuição
+Contribuições são bem-vindas! Siga o fluxo:
+1. Fork do repositório
+2. Crie um branch para sua feature (`git checkout -b feature/awesome-feature`)
+3. Commit suas mudanças (`git commit -am 'Add awesome feature'`)
+4. Push para o branch (`git push origin feature/awesome-feature`)
+5. Abra um Pull Request
+
+## 📄 Licença
+Este projeto está licenciado sob a MIT License - veja o arquivo [LICENSE](LICENSE) para detalhes.
