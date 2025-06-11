@@ -9,12 +9,13 @@ O objetivo é criar uma configuração padronizada, segura, versionada e facilme
 A pilha de serviços inclui:
 
 * **Caddy:** Proxy reverso moderno e automático com HTTPS.
-* **PostgreSQL:** Banco de dados relacional robusto.
+* **PostgreSQL:** Banco de dados relacional robusto para aplicações.
+* **Redis:** Banco de dados em memória para sessões do Authelia.
+* **Authelia:** Portal de autenticação unificada (SSO) e 2FA para proteger os serviços (Ex: `authelia.galvani4987.duckdns.org`).
 * **n8n:** Plataforma de automação de fluxos de trabalho (Ex: `n8n.galvani4987.duckdns.org`).
 * **Homer:** Um dashboard simples e estático para acesso rápido aos serviços (Ex: `home.galvani4987.duckdns.org`).
 * **Waha:** Uma API HTTP para integração com o WhatsApp (Ex: `waha.galvani4987.duckdns.org`).
 * **Cockpit:** Interface para gerenciamento do servidor host (Acesso via `http://IP_DO_SERVIDOR:9090`).
-* **Althelia:** (Definição pendente de documentação).
 
 ## 🏛️ Estrutura do Repositório
 
