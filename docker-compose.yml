@@ -1,0 +1,7 @@
+version: '3.8'
+
+# Rede customizada para que todos os nossos contêineres possam se comunicar
+# uns com os outros usando seus nomes como se fossem "DNS".
+networks:
+  app-network:
+    driver: bridge
