@@ -2,20 +2,29 @@
 
 Este repositório contém a configuração completa para implantar uma pilha de serviços de auto-hospedagem (self-hosted) em um servidor VPS (Ubuntu 24.04), utilizando Docker e Docker Compose.
 
-O objetivo é criar uma configuração padronizada, segura, versionada e facilmente replicável para os serviços rodando sob o domínio **galvani4987.duckdns.org**.
+O objetivo é criar uma configuração padronizada, segura, versionada e facilmente replicável.
+
+## 🔐 Fluxo de Acesso e Segurança
+
+Este ambiente foi projetado com um modelo de segurança centralizado:
+
+1.  O ponto de entrada principal é o domínio raiz: **https://galvani4987.duckdns.org**.
+2.  Todo o acesso é protegido e gerenciado pelo **Authelia**, que exige login com usuário, senha e **Autenticação de Dois Fatores (2FA/TOTP)** via um aplicativo como o Google Authenticator.
+3.  Após a autenticação bem-sucedida, o usuário é direcionado para o dashboard principal **Homer**.
+4.  Uma vez logado, o acesso aos outros serviços (como n8n, waha, etc.) é liberado através de Single Sign-On (SSO), sem a necessidade de um novo login.
 
 ## 🚀 Serviços Implantados
 
 A pilha de serviços inclui:
 
-* **Caddy:** Proxy reverso moderno e automático com HTTPS.
+* **Caddy:** Proxy reverso moderno e automático com HTTPS. É o portão de entrada para todos os serviços.
 * **PostgreSQL:** Banco de dados relacional robusto para aplicações.
-* **Redis:** Banco de dados em memória para sessões do Authelia.
-* **Authelia:** Portal de autenticação unificada (SSO) e 2FA para proteger os serviços (Ex: `authelia.galvani4987.duckdns.org`).
-* **n8n:** Plataforma de automação de fluxos de trabalho (Ex: `n8n.galvani4987.duckdns.org`).
-* **Homer:** Um dashboard simples e estático para acesso rápido aos serviços (Ex: `home.galvani4987.duckdns.org`).
-* **Waha:** Uma API HTTP para integração com o WhatsApp (Ex: `waha.galvani4987.duckdns.org`).
-* **Cockpit:** Interface para gerenciamento do servidor host (Acesso via `http://IP_DO_SERVIDOR:9090`).
+* **Redis:** Banco de dados em memória ultrarrápido, utilizado para o gerenciamento de sessões do Authelia.
+* **Authelia:** O portal de segurança que provê autenticação unificada (SSO) e 2FA (Ex: `authelia.galvani4987.duckdns.org`).
+* **Homer:** Dashboard Principal, acessível no domínio raiz (`https://galvani4987.duckdns.org`) após o login.
+* **n8n:** Plataforma de automação de fluxos de trabalho, protegida pelo Authelia (Ex: `n8n.galvani4987.duckdns.org`).
+* **Waha:** API HTTP para integração com o WhatsApp, protegida pelo Authelia (Ex: `waha.galvani4987.duckdns.org`).
+* **Cockpit:** Interface para gerenciamento do servidor host (Acesso direto via `https://IP_DO_SERVIDOR:9090`).
 
 ## 🏛️ Estrutura do Repositório
 

@@ -89,7 +89,7 @@ Este documento é o guia de execução passo a passo para a implantação da pil
     - [ ] `docker compose logs caddy`: Verificar se o Caddy obteve um certificado SSL para `n8n.galvani4987.duckdns.org`.
     - [ ] **Verificação Externa:** Acessar **`https://n8n.galvani4987.duckdns.org`** no navegador. A página de configuração inicial do n8n deve carregar com um cadeado de HTTPS válido.
 
-### 2.B - Serviço Homer (Dashboard)
+### 2.B - Serviço Homer (Dashboard Principal)
 - [ ] **2.B.1. Pesquisa:**
     - [ ] Pesquisar por "Homer dashboard docker" no Docker Hub ou no GitHub do projeto (`bastienwirtz/homer`).
     - [ ] Encontrar o nome da imagem e entender como sua configuração funciona (mapeamento do diretório `/www/assets`).
@@ -97,7 +97,7 @@ Este documento é o guia de execução passo a passo para a implantação da pil
 - [ ] **2.B.2. Configuração:**
     - [ ] Criar um subdiretório `homer` dentro de `docker-stack` para guardar os arquivos de configuração do Homer.
     - [ ] Adicionar o serviço `homer` ao `docker-compose.yml`, mapeando o diretório `./homer:/www/assets`.
-    - [ ] Adicionar um novo bloco no `Caddyfile` para o subdomínio `home.galvani4987.duckdns.org`, fazendo proxy para o serviço `homer:8080`.
+    - [ ] **Importante:** Adicionar um novo bloco no `Caddyfile` para o domínio raiz **`galvani4987.duckdns.org`**, que fará proxy para o serviço `homer:8080` e será protegido pelo Authelia.
 
 - [ ] **2.B.3. Implantação:**
     - [ ] Executar `docker compose up -d`.
@@ -105,8 +105,7 @@ Este documento é o guia de execução passo a passo para a implantação da pil
 - [ ] **2.B.4. Verificação:**
     - [ ] `docker compose ps`: O serviço `homer` deve estar `running`.
     - [ ] `docker compose logs homer`: Verificar se não há erros.
-    - [ ] **Verificação Externa:** Acessar **`https://home.galvani4987.duckdns.org`**. O dashboard padrão do Homer deve carregar.
-
+    - [ ] **Verificação Externa:** Acessar **`https://galvani4987.duckdns.org`**. O acesso deve ser bloqueado e redirecionado para o portal de login do Authelia (após a Fase 3 ser implementada). Após o login, o dashboard do Homer deve carregar no domínio principal.
 ---
 
 ## Fase 3: Segurança e Serviços Especializados
