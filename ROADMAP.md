@@ -109,35 +109,66 @@ Este documento é o guia de execução passo a passo para a implantação da pil
 
 ---
 
-## Fase 3: Serviços Especializados
-*O objetivo é adicionar aplicações com necessidades mais específicas.*
+## Fase 3: Segurança e Serviços Especializados
+*O objetivo é adicionar um portal de autenticação robusto com Authelia e implantar o gateway Waha.*
 
-### 3.A - Serviço Waha (WhatsApp Gateway)
+### 3.A - Serviço Redis (Dependência do Authelia)
+*Redis é um banco de dados em memória ultrarrápido que o Authelia usará para armazenar dados de sessão.*
+
 - [ ] **3.A.1. Pesquisa:**
-    - [ ] Pesquisar por "waha whatsapp http api docker" para encontrar a documentação e a imagem Docker oficial (ex: no Docker Hub ou GitHub).
-    - [ ] Identificar variáveis de ambiente, portas e volumes necessários para gerenciamento de sessão.
+    - [ ] Acessar o Docker Hub e pesquisar pela imagem oficial do `redis`.
+    - [ ] Anotar a tag recomendada para produção (ex: `redis:7-alpine`).
 
 - [ ] **3.A.2. Configuração:**
-    - [ ] Adicionar o serviço `waha` ao `docker-compose.yml` com suas configurações específicas.
-    - [ ] Se o Waha tiver uma interface web para escanear QR Code, adicionar um novo bloco ao `Caddyfile` para o subdomínio `waha.galvani4987.duckdns.org`.
+    - [ ] Adicionar a definição do serviço `redis` ao `docker-compose.yml`.
+    - [ ] Configurar um volume nomeado (`redis_data`) para persistência de dados.
 
 - [ ] **3.A.3. Implantação:**
-    - [ ] Executar `docker compose up -d`.
+    - [ ] Executar `docker compose up -d redis`.
 
 - [ ] **3.A.4. Verificação:**
+    - [ ] `docker compose ps`: Verificar se o serviço `redis` está `running`.
+    - [ ] `docker compose logs redis`: Procurar pela mensagem "Ready to accept connections".
+
+### 3.B - Serviço Authelia (Portal de Autenticação e 2FA)
+- [ ] **3.B.1. Pesquisa:**
+    - [ ] Acessar a documentação oficial do Authelia em `authelia.com`.
+    - [ ] Focar nas seções de "Getting Started", "Configuration" e, crucialmente, na de "Integrations > Proxies > Caddy".
+    - [ ] Entender a estrutura do arquivo `configuration.yml` do Authelia e como configurar o armazenamento de usuários (começaremos com um arquivo local) e a conexão com o Redis.
+
+- [ ] **3.B.2. Configuração:**
+    - [ ] Criar um diretório `./authelia` para os arquivos de configuração.
+    - [ ] Criar o `authelia/configuration.yml` e o `authelia/users_database.yml` com base na documentação.
+    - [ ] Adicionar as senhas e segredos do Authelia (JWT secret, senhas de notificação, etc.) ao arquivo `.env`.
+    - [ ] Adicionar o serviço `authelia` ao `docker-compose.yml`, mapeando os arquivos de configuração e conectando-o às redes `app-network` e ao serviço `redis`.
+    - [ ] No `Caddyfile`, adicionar o bloco para o portal do Authelia: `authelia.galvani4987.duckdns.org`.
+    - [ ] No `Caddyfile`, modificar os blocos dos serviços que queremos proteger (ex: Homer, n8n) para incluir a diretiva `forward_auth` apontando para o Authelia.
+
+- [ ] **3.B.3. Implantação:**
+    - [ ] Executar `docker compose up -d`.
+
+- [ ] **3.B.4. Verificação:**
+    - [ ] `docker compose ps`: Verificar se `authelia` está `running`.
+    - [ ] `docker compose logs authelia`: Verificar se ele iniciou com sucesso e se conectou ao Redis e ao banco de dados de usuários.
+    - [ ] **Verificação Externa 1 (Portal):** Acessar **`https://authelia.galvani4987.duckdns.org`**. A página de login do Authelia deve carregar.
+    - [ ] **Verificação Externa 2 (Serviço Protegido):** Tentar acessar um serviço protegido (ex: **`https://home.galvani4987.duckdns.org`**). Você deve ser redirecionado para a página de login do Authelia. Após o login, você deve ser redirecionado de volta para o Homer.
+
+### 3.C - Serviço Waha (WhatsApp Gateway)
+- [ ] **3.C.1. Pesquisa:**
+    - [ ] Pesquisar por "waha whatsapp http api docker" para encontrar a documentação e a imagem Docker oficial.
+    - [ ] Identificar variáveis de ambiente, portas e volumes necessários para gerenciamento de sessão.
+
+- [ ] **3.C.2. Configuração:**
+    - [ ] Adicionar o serviço `waha` ao `docker-compose.yml`.
+    - [ ] Se necessário, adicionar um bloco ao `Caddyfile` para `waha.galvani4987.duckdns.org` e protegê-lo com `forward_auth` do Authelia.
+
+- [ ] **3.C.3. Implantação:**
+    - [ ] Executar `docker compose up -d`.
+
+- [ ] **3.C.4. Verificação:**
     - [ ] `docker compose ps`: Verificar se o `waha` está `running`.
     - [ ] `docker compose logs waha`: Procurar por mensagens de sucesso na inicialização.
-    - [ ] **Verificação Externa/Interna:** Testar a API ou acessar o subdomínio, conforme a documentação encontrada.
-
-### 3.B - Serviço Althelia
-- [ ] **3.B.1. Pesquisa:**
-    - [ ] **Sua primeira tarefa é pesquisar por "Althelia" e encontrar sua documentação oficial, repositório ou página no Docker Hub.**
-    - [ ] **Precisamos descobrir:** Qual o nome da imagem Docker? Quais volumes precisa? Quais variáveis de ambiente são necessárias? Qual porta interna ele usa para comunicação?
-
-- [ ] **3.B.2. Configuração:** A ser definido com base nos resultados da pesquisa.
-- [ ] **3.B.3. Implantação:** A ser definido com base nos resultados da pesquisa.
-- [ ] **3.B.4. Verificação:** A ser definido com base nos resultados da pesquisa.
-
+    - [ ] Testar a API ou acessar o subdomínio, conforme a documentação encontrada.
 ---
 
 ## Fase 4: Gerenciamento do Servidor
