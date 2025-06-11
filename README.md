@@ -26,17 +26,47 @@ A pilha de serviços inclui:
 * **Waha:** API HTTP para integração com o WhatsApp, protegida pelo Authelia (Ex: `waha.galvani4987.duckdns.org`).
 * **Cockpit:** Interface para gerenciamento do servidor host (Acesso direto via `https://IP_DO_SERVIDOR:9090`).
 
-## 🏛️ Estrutura do Repositório
+## ⚙️ Implantação em um Novo Servidor
 
-* `docker-compose.yml`: Arquivo principal que define todos os serviços, redes e volumes Docker.
-* `Caddyfile`: Arquivo de configuração para o proxy reverso Caddy.
-* `.env`: Arquivo para armazenar variáveis de ambiente e segredos (este arquivo **não deve** ser enviado para o Git).
-* `README.md`: Este arquivo.
-* `ROADMAP.md`: O passo a passo detalhado da implantação.
+Este repositório é projetado para uma implantação rápida e semi-automatizada.
 
-## ⚙️ Como Usar
+**Pré-requisitos:**
+* Um servidor limpo com Ubuntu 24.04.
+* Acesso root/sudo.
+* O DNS do seu domínio (`galvani4987.duckdns.org`) já apontando para o IP do novo servidor.
 
-1.  **Pré-requisitos:** Um servidor com Ubuntu 24.04, Docker e Docker Compose instalados. O DNS do domínio deve apontar para o IP do servidor.
-2.  Clone este repositório: `git clone git@github.com:galvani4987/docker-stack.git`
-3.  Configure o arquivo `.env` com as senhas e variáveis necessárias.
-4.  Inicie a pilha de serviços: `docker compose up -d`
+**Passos de Implantação:**
+
+1.  **Clone o Repositório:**
+    ```bash
+    # Instale o git primeiro, se necessário: sudo apt update && sudo apt install git -y
+    git clone git@github.com:galvani4987/docker-stack.git
+    cd docker-stack
+    ```
+
+2.  **Execute o Script de Bootstrap:**
+    Este script instalará dependências do servidor (como Cockpit) e preparará o ambiente.
+    ```bash
+    sudo bash bootstrap.sh
+    ```
+
+3.  **Edite seus Segredos:**
+    O script de bootstrap criou o arquivo `.env`. Edite-o com suas senhas e tokens.
+    ```bash
+    nano .env
+    ```
+
+4.  **Inicie a Pilha Docker:**
+    Com tudo configurado, inicie todos os serviços.
+    ```bash
+    docker compose up -d
+    ```
+
+5.  **Configurações Manuais Pós-Instalação:**
+    * **Cron Job (Keep-Alive):** Se desejar, configure o cron job para o script de atividade:
+        ```bash
+        # Abre o editor de cron jobs
+        crontab -e
+        # Adicione a linha e salve:
+        0 * * * * /home/ubuntu/scripts/manter_ativo.sh
+        ```
