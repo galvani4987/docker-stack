@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 echo "--- Iniciando Bootstrap do Servidor ---"
 
 # Verificar privilégios
@@ -38,6 +39,7 @@ fi
 # Configurar usuário Docker
 echo "> Configurando usuário Docker..."
 usermod -aG docker ubuntu
+echo "User 'ubuntu' added to the 'docker' group. You may need to log out and log back in for this change to take full effect in your current session."
 
 # Instalar Cockpit
 echo "> Instalando Cockpit..."
@@ -46,11 +48,16 @@ systemctl enable --now cockpit.socket
 
 # Criar estrutura de diretórios
 echo "> Criando estrutura de diretórios..."
-mkdir -p {config,data,scripts}
+mkdir -p data # 'config' and 'scripts' are expected from the repository
 
 # Configurar ambiente
 echo "> Configurando ambiente..."
-[ ! -f .env ] && cp .env.example .env 2>/dev/null || echo ".env já existe"
+if [ ! -f .env ]; then
+  cp .env.example .env
+  echo ".env file created from .env.example"
+else
+  echo ".env já existe"
+fi
 chmod +x *.sh scripts/*.sh 2>/dev/null
 
 echo "--- Bootstrap Concluído ---"

@@ -1,4 +1,10 @@
 #!/bin/bash
+# Verificar privilégios
+if [ "$EUID" -ne 0 ]; then
+  echo "Por favor, execute com sudo: sudo bash $0"
+  exit 1
+fi
+set -e
 echo "=== Iniciando Limpeza do Servidor ==="
 
 # 1. Remover Docker e componentes
@@ -21,7 +27,9 @@ sudo ufw -f enable
 echo "> Limpando sistema..."
 sudo apt autoremove -y
 sudo apt clean
-sudo rm -rf /tmp/* /var/tmp/*
+echo "> Removendo arquivos temporários de /tmp e /var/tmp..."
+sudo find /tmp -mindepth 1 -delete
+sudo find /var/tmp -mindepth 1 -delete
 
 # 4. Verificar limpeza
 echo "> Verificando limpeza:"
