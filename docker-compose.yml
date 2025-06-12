@@ -1,10 +1,40 @@
-version: '3.8'
+# version: '3.8'
 
-# Rede customizada para que todos os nossos contêineres possam se comunicar
-# uns com os outros usando seus nomes como se fossem "DNS".
 networks:
   app-network:
     driver: bridge
 
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  caddy:
+    image: caddy:alpine
+    container_name: caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - app-network
+    restart: unless-stopped
+
 volumes:
-  - ./config/Caddyfile:/etc/caddy/Caddyfile
+  postgres_data:
+  caddy_data:
+  caddy_config:

@@ -1,6 +1,6 @@
 # Roadmap de Implantação Detalhado
 
-**Estado Atual:** Fase 0 concluída, Fase 1 em andamento  
+**Estado Atual:** Fase 1.B concluída, Fase 2.A em andamento  
 **Última Atualização:** 11 de Junho de 2025  
 
 **Domínio Base:** `galvani4987.duckdns.org`  
@@ -67,8 +67,8 @@
 
 ### 1.B - Serviço Caddy [▶️]
 - [✅] **1.B.1. Pesquisa:** Imagem oficial Caddy e estrutura do Caddyfile  
-- [ ] **1.B.2. Configuração:**  
-    - [ ] Criar arquivo `Caddyfile` básico:  
+- [✅] **1.B.2. Configuração:**  
+    - [✅} Criar arquivo `Caddyfile` básico:  
       ```caddy
       {
         email ${CADDY_EMAIL}
@@ -78,7 +78,7 @@
         respond "Serviço Caddy Funcionando!"  
       }
       ```  
-    - [ ] Adicionar serviço ao `docker-compose.yml`:  
+    - [✅] Adicionar serviço ao `docker-compose.yml`:  
       ```yaml
       caddy:
         image: caddy:alpine
@@ -92,25 +92,25 @@
         networks:
           - app-network
       ```  
-    - [ ] Adicionar variável ao `.env`:  
+    - [✅] Adicionar variável ao `.env`:  
       ```env
       CADDY_EMAIL=seu_email@provedor.com
       ```  
-- [ ] **1.B.3. Implantação:**  
-    - [ ] Executar: 
+- [✅] **1.B.3. Implantação:**  
+    - [✅] Executar: 
       ```bash
       docker compose up -d caddy
       ```  
-- [ ] **1.B.4. Verificação:**  
-    - [ ] Verificar status: 
+- [✅] **1.B.4. Verificação:**  
+    - [✅] Verificar status: 
       ```bash
       docker compose ps
       ```  
-    - [ ] Verificar logs: 
+    - [✅] Verificar logs: 
       ```bash
       docker compose logs caddy
       ```  
-    - [ ] Testar acesso: 
+    - [✅] Testar acesso: 
       ```bash
       curl https://galvani4987.duckdns.org
       ```  
@@ -121,7 +121,7 @@
 *Implantação do n8n e Homer*
 
 ### 2.A - Serviço n8n (Automação) [ ]
-- [ ] **2.A.1. Pesquisa:** Configuração do n8n com PostgreSQL  
+- [✅] **2.A.1. Pesquisa:** Configuração do n8n com PostgreSQL  
 - [ ] **2.A.2. Configuração:**  
     - [ ] Adicionar variáveis ao `.env`:  
       ```env
