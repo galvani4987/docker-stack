@@ -51,7 +51,7 @@
 * \[✅\] **1.A.1. Pesquisa:** Imagem oficial PostgreSQL (tag: `16-alpine`)
 
 * \[✅\] **1.A.2. Configuração:** 
-
+    * \[✅\] Consulte o [Tutorial de Configuração do PostgreSQL](docs/setup_postgresql.md) para um guia detalhado da sua configuração neste projeto.
   * \[✅\] Variáveis adicionadas ao `.env`:
 
   ```env
@@ -349,7 +349,9 @@
 
 * \[ \] **3.C.1. Pesquisa:** Imagem oficial Waha (`devlikeapro/waha`), variáveis de ambiente para configuração (ex: `WAHA_DEBUG`, `WAHA_WEBHOOK_URL`).
 
-* \[ \] **3.C.2. Configuração:** - \[ \] Adicionar variáveis ao `.env` (ex: `WAHA_DEBUG=false`, `WAHA_WEBHOOK_URL=<seu_webhook_url>`).
+* \[ \] **3.C.2. Configuração:**
+    * \[ \] Consulte o [Tutorial de Instalação do WAHA](docs/setup_waha.md) para um guia detalhado de configuração e implantação.
+  * \[ \] Adicionar variáveis ao `.env` (ex: `WAHA_DEBUG=false`, `WAHA_WEBHOOK_URL=<seu_webhook_url>`).
 
   * \[ \] Adicionar serviço ao `docker-compose.yml`:
 
