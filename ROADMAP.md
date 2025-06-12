@@ -1,12 +1,12 @@
 # Roadmap de Implantação Detalhado
 
-**Estado Atual:** Fase 1.B concluída, Fase 2.A em andamento
+**Estado Atual:** Fases 0 e 1 concluídas. Fase 2.A (n8n Configuração) parcialmente concluída. Fase 4 (Cockpit Instalação) parcialmente concluída. Implementação do script `manter_ativo.sh` concluída.
 
-**Última Atualização:** 11 de Junho de 2025
+**Última Atualização:** 17 de Julho de 2024
 
-**Domínio Base:** `galvani4987.duckdns.org`
+**Domínio Base:** [`galvani4987.duckdns.org`](https://galvani4987.duckdns.org)
 
-**Convenção de Subdomínio:** `aplicativo.galvani4987.duckdns.org`
+**Convenção de Subdomínio:** `aplicativo.galvani4987.duckdns.org` (Ex: [`n8n.galvani4987.duckdns.org`](https://n8n.galvani4987.duckdns.org))
 
 **Legenda:** 
 
@@ -32,21 +32,21 @@
 
   * \[✅\] `docker-compose.yml` com estrutura inicial
 
-  * \[✅\] Scripts criados:
-
-    * `bootstrap.sh` para configuração inicial
-
-    * `clean-server.sh` para reset completo
-
+  * \[✅\] Scripts criados e refinados:
+    * `bootstrap.sh` para configuração inicial (revisado e melhorado)
+    * `clean-server.sh` para reset completo (revisado e melhorado)
+    * `manter_ativo.sh` para monitoramento de serviços (implementado)
   * \[✅\] `README.md` atualizado com instruções
 
-* \[✅\] **0.3. Verificação:** - \[✅\] Estrutura de arquivos confirmada
+* \[✅\] **0.3. Verificação:**
+  * \[✅\] Estrutura de arquivos confirmada
+  * \[ \] Cron job para `manter_ativo.sh` configurado (conforme instruções no README.md)
 
-## Fase 1: A Fundação (Proxy Reverso e Banco de Dados) \[▶️\]
+## Fase 1: A Fundação (Proxy Reverso e Banco de Dados) \[✅\]
 
 *Configuração do PostgreSQL e Caddy*
 
-### 1.A - Serviço PostgreSQL \[▶️\]
+### 1.A - Serviço PostgreSQL \[✅\]
 
 * \[✅\] **1.A.1. Pesquisa:** Imagem oficial PostgreSQL (tag: `16-alpine`)
 
@@ -74,18 +74,18 @@
 
 * \[✅\] **1.A.3. Implantação:** 
 
-  * \[✅\] Executado: `bash docker compose up -d postgres `
+  * \[✅\] Executado: `docker compose up -d postgres `
 
 * \[✅\] **1.A.4. Verificação:** 
 
-  * \[✅\] Serviço em execução: `bash docker compose ps `
+  * \[✅\] Serviço em execução: `docker compose ps `
 
   * \[✅\] Logs verificados: 
   ```bash
     docker compose logs postgres | grep "ready to accept"
   ```
 
-### 1.B - Serviço Caddy \[▶️\]
+### 1.B - Serviço Caddy \[✅\]
 
 * \[✅\] **1.B.1. Pesquisa:** Imagem oficial Caddy e estrutura do Caddyfile
 
@@ -129,11 +129,11 @@
 * \[✅\] **1.B.3. Implantação:** 
 
   * \[✅\] Executar:
-  `bash docker compose up -d caddy `
+  `docker compose up -d caddy `
 
 * \[✅\] **1.B.4. Verificação:** 
   * \[✅\] Verificar status:
-  `bash docker compose ps `
+  `docker compose ps `
 
   * \[✅\] Verificar logs:
 
@@ -166,7 +166,7 @@
   N8N_DB_POSTGRESDB_USER=${POSTGRES_USER}
   N8N_DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
   N8N_DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
-  N8N_WEBHOOK_URL=[https://n8n.galvani4987.duckdns.org/](https://n8n.galvani4987.duckdns.org/)
+  N8N_WEBHOOK_URL=https://n8n.galvani4987.duckdns.org/
   N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false
   N8N_RUNNERS_ENABLED=true
   ```
@@ -229,7 +229,7 @@
   links:
     - name: n8n
       icon: "fas fa-robot"
-      url: [https://n8n.galvani4987.duckdns.org](https://n8n.galvani4987.duckdns.org)
+      url: https://n8n.galvani4987.duckdns.org
     # Adicione mais links aqui
   ```
 
@@ -384,7 +384,7 @@
 
 ---
 
-## Fase 4: Gerenciamento do Servidor \[ \]
+## Fase 4: Gerenciamento do Servidor \[▶️\]
 
 *Instalação do Cockpit para administração*
 
@@ -419,19 +419,19 @@ gantt
     title Progresso da Implantação
     dateFormat  YYYY-MM-DD
     section Fase 0
-    Preparação do Ambiente       :done,    des1, 2025-06-10, 2d
+    Preparação do Ambiente       :done,    des1, 2024-06-10, 2d
     section Fase 1
-    PostgreSQL                   :done,    des2, 2025-06-11, 3d
-    Caddy                        :done,    des3, 2025-06-12, 4d
+    PostgreSQL                   :done,    des2, 2024-06-11, 3d
+    Caddy                        :done,    des3, 2024-06-12, 4d
     section Fase 2
-    n8n                          :active,  des4, 2025-06-13, 3d
+    n8n                          :active,  des4, 2024-06-13, 3d
     Homer                        :         des5, after des4, 3d
     section Fase 3
     Redis                        :         des6, after des5, 2d
     Authelia                     :         des7, after des6, 5d
     Waha                         :         des8, after des7, 3d
     section Fase 4
-    Cockpit                      :         des9, after des8, 2d
+    Cockpit                      :active,  des9, after des8, 2d
     section Fase 5
     Backup                       :         des10, after des9, 3d
 
