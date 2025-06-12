@@ -8,7 +8,9 @@
 
 **Convenção de Subdomínio:** `aplicativo.galvani4987.duckdns.org`
 
-**Legenda:** - `[ ]` - Pendente
+**Legenda:** 
+
+* `[ ]` - Pendente
 
 * `[▶️]` - Em Andamento
 
@@ -197,14 +199,14 @@
 
   * \[✅\] Configurar proxy no `Caddyfile` (será feito na Fase 3.B após Authelia):
 
-    ```caddy
-    n8n.galvani4987.duckdns.org {
-      reverse_proxy n8n:5678
-      # forward_auth http://authelia:9091 { # será adicionado após Authelia
-      #   uri /authelia
-      # }
-    }
-    ```
+  ```caddy
+  n8n.galvani4987.duckdns.org {
+    reverse_proxy n8n:5678
+    # forward_auth http://authelia:9091 { # será adicionado após Authelia
+    #   uri /authelia
+    # }
+  }
+  ```
 
 * \[ \] **2.A.3. Implantação:** 
 
