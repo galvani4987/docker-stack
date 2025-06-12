@@ -191,11 +191,17 @@
     }
     ```
 
-* \[ \] **2.A.3. Implantação:** - \[ \] **2.A.4. Verificação:** ### 2.B - Serviço Homer (Dashboard Principal) \[ \]
+* \[ \] **2.A.3. Implantação:** 
+
+* \[ \] **2.A.4. Verificação:** 
+
+### 2.B - Serviço Homer (Dashboard Principal)
 
 * \[ \] **2.B.1. Pesquisa:** Imagem oficial Homer, estrutura de configuração e como servir arquivos estáticos via Caddy.
 
-* \[ \] **2.B.2. Configuração:** - \[ \] Criar diretório `config/homer` e adicionar o arquivo `config.yml` (exemplo básico):
+* \[ \] **2.B.2. Configuração:** 
+
+- \[ \] Criar diretório `config/homer` e adicionar o arquivo `config.yml` (exemplo básico):
 
   ```yaml
   # config.yml para Homer
