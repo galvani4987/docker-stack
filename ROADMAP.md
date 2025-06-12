@@ -20,7 +20,9 @@
 
 * \[✅\] **0.1. Pesquisa:** Melhores práticas para organização de projetos Docker
 
-* \[✅\] **0.2. Configuração:** - \[✅\] Repositório clonado em `/home/ubuntu/docker-stack`
+* \[✅\] **0.2. Configuração:** 
+
+  * \[✅\] Repositório clonado em `/home/ubuntu/docker-stack`
 
   * \[✅\] Arquivo `.gitignore` criado com entrada `.env`
 
@@ -46,7 +48,9 @@
 
 * \[✅\] **1.A.1. Pesquisa:** Imagem oficial PostgreSQL (tag: `16-alpine`)
 
-* \[✅\] **1.A.2. Configuração:** - \[✅\] Variáveis adicionadas ao `.env`:
+* \[✅\] **1.A.2. Configuração:** 
+
+  * \[✅\] Variáveis adicionadas ao `.env`:
 
   ```env
   POSTGRES_DB=main_db
@@ -66,9 +70,13 @@
         - app-network
     ```
 
-* \[✅\] **1.A.3. Implantação:** - \[✅\] Executado: `bash docker compose up -d postgres `
+* \[✅\] **1.A.3. Implantação:** 
 
-* \[✅\] **1.A.4. Verificação:** - \[✅\] Serviço em execução: `bash docker compose ps `
+  * \[✅\] Executado: `bash docker compose up -d postgres `
+
+* \[✅\] **1.A.4. Verificação:** 
+
+  * \[✅\] Serviço em execução: `bash docker compose ps `
 
   * \[✅\] Logs verificados: 
   ```bash
@@ -79,7 +87,9 @@
 
 * \[✅\] **1.B.1. Pesquisa:** Imagem oficial Caddy e estrutura do Caddyfile
 
-* \[✅\] **1.B.2. Configuração:** - \[✅\] Criar arquivo `Caddyfile` básico:
+* \[✅\] **1.B.2. Configuração:** 
+
+  * \[✅\] Criar arquivo `Caddyfile` básico:
 
   ```caddy
   {
@@ -114,10 +124,13 @@
     CADDY_EMAIL=seu_email@provedor.com
     ```
 
-* \[✅\] **1.B.3. Implantação:** - \[✅\] Executar:
+* \[✅\] **1.B.3. Implantação:** 
+
+  * \[✅\] Executar:
   `bash docker compose up -d caddy `
 
-* \[✅\] **1.B.4. Verificação:** - \[✅\] Verificar status:
+* \[✅\] **1.B.4. Verificação:** 
+  * \[✅\] Verificar status:
   `bash docker compose ps `
 
   * \[✅\] Verificar logs:
@@ -129,7 +142,7 @@
   * \[✅\] Testar acesso:
 
     ```bash
-    curl [https://galvani4987.duckdns.org](https://galvani4987.duckdns.org)
+    curl https://galvani4987.duckdns.org
     ```
 
 ## Fase 2: Aplicações Web Principais \[▶️\]
@@ -140,7 +153,9 @@
 
 * \[✅\] **2.A.1. Pesquisa:** Configuração do n8n com PostgreSQL, variáveis de ambiente necessárias e integração com Caddy.
 
-* \[✅\] **2.A.2. Configuração:** - \[✅\] Adicionar variáveis ao `.env`:
+* \[✅\] **2.A.2. Configuração:** 
+
+  * \[✅\] Adicionar variáveis ao `.env`:
 
   ```env
   N8N_DB_TYPE=postgresdb
@@ -195,13 +210,13 @@
 
 * \[ \] **2.A.4. Verificação:** 
 
-### 2.B - Serviço Homer (Dashboard Principal)
+### 2.B - Serviço Homer (Dashboard Principal) \[ \]
 
 * \[ \] **2.B.1. Pesquisa:** Imagem oficial Homer, estrutura de configuração e como servir arquivos estáticos via Caddy.
 
 * \[ \] **2.B.2. Configuração:** 
 
-- \[ \] Criar diretório `config/homer` e adicionar o arquivo `config.yml` (exemplo básico):
+  * \[ \] Criar diretório `config/homer` e adicionar o arquivo `config.yml` (exemplo básico):
 
   ```yaml
   # config.yml para Homer
@@ -240,7 +255,10 @@
     }
     ```
 
-* \[ \] **2.B.3. Implantação:** - \[ \] **2.B.4. Verificação:** ---
+* \[ \] **2.B.3. Implantação:** 
+
+* \[ \] **2.B.4. Verificação:** 
+---
 
 ## Fase 3: Segurança e Serviços Especializados \[ \]
 
@@ -250,7 +268,9 @@
 
 * \[ \] **3.A.1. Pesquisa:** Imagem Redis oficial (`redis:alpine`) e como configurar volumes para persistência.
 
-* \[ \] **3.A.2. Configuração:** - \[ \] Adicionar serviço ao `docker-compose.yml`:
+* \[ \] **3.A.2. Configuração:** 
+
+  * \[ \] Adicionar serviço ao `docker-compose.yml`:
 
   ```yaml
   redis:
@@ -263,11 +283,17 @@
     restart: unless-stopped
   ```
 
-* \[ \] **3.A.3. Implantação:** - \[ \] **3.A.4. Verificação:** ### 3.B - Serviço Authelia (Portal de Autenticação) \[ \]
+* \[ \] **3.A.3. Implantação:** 
+
+* \[ \] **3.A.4. Verificação:** 
+
+### 3.B - Serviço Authelia (Portal de Autenticação) \[ \]
 
 * \[ \] **3.B.1. Pesquisa:** Documentação oficial do Authelia, configuração do `configuration.yml`, chaves para 2FA, e integração com Caddy via `forward_auth`.
 
-* \[ \] **3.B.2. Configuração:** - \[ \] Criar diretório `config/authelia` com `configuration.yml` e `users.yml`.
+* \[ \] **3.B.2. Configuração:** 
+
+  * \[ \] Criar diretório `config/authelia` com `configuration.yml` e `users.yml`.
 
   * \[ \] Adicionar segredos ao `.env` (ex: `AUTHELIA_JWT_SECRET`, `AUTHELIA_SESSION_SECRET`, `AUTHELIA_DUO_API_SECRET`, `AUTHELIA_ADMIN_PASSWORD`).
 
@@ -314,7 +340,11 @@
     # waha.galvani4987.duckdns.org (será adicionado na próxima fase)
     ```
 
-* \[ \] **3.B.3. Implantação:** - \[ \] **3.B.4. Verificação:** ### 3.C - Serviço Waha (WhatsApp Gateway) \[ \]
+* \[ \] **3.B.3. Implantação:** 
+
+* \[ \] **3.B.4. Verificação:** 
+
+### 3.C - Serviço Waha (WhatsApp Gateway) \[ \]
 
 * \[ \] **3.C.1. Pesquisa:** Imagem oficial Waha (`devlikeapro/waha`), variáveis de ambiente para configuração (ex: `WAHA_DEBUG`, `WAHA_WEBHOOK_URL`).
 
@@ -347,7 +377,11 @@
     }
     ```
 
-* \[ \] **3.C.3. Implantação:** - \[ \] **3.C.4. Verificação:** ---
+* \[ \] **3.C.3. Implantação:** 
+
+* \[ \] **3.C.4. Verificação:** 
+
+---
 
 ## Fase 4: Gerenciamento do Servidor \[ \]
 
@@ -365,13 +399,17 @@
 
 * \[ \] **5.1. Pesquisa:** Estratégias de backup para Docker (volumes, bancos de dados), ferramentas (ex: `restic`, scripts tar/gzip) e opções de armazenamento remoto (ex: S3, rclone).
 
-* \[ \] **5.2. Configuração:** - \[ \] Criar script `scripts/backup.sh` para backup dos volumes do Docker e dados do PostgreSQL.
+* \[ \] **5.2. Configuração:** 
+
+  * \[ \] Criar script `scripts/backup.sh` para backup dos volumes do Docker e dados do PostgreSQL.
 
   * \[ \] Adicionar script `scripts/restore.sh` para facilitar a recuperação.
 
   * \[ \] Configurar cron job diário para o script de backup.
 
-* \[ \] **5.3. Verificação:** - \[ \] Teste de backup/restore (simular um desastre para garantir a recuperação).
+* \[ \] **5.3. Verificação:** 
+
+  * \[ \] Teste de backup/restore (simular um desastre para garantir a recuperação).
 
 ## Progresso Atual
 
@@ -395,3 +433,4 @@ gantt
     Cockpit                      :         des9, after des8, 2d
     section Fase 5
     Backup                       :         des10, after des9, 3d
+
