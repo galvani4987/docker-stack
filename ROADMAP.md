@@ -60,15 +60,15 @@
 
   * \[✅\] Serviço adicionado ao `docker-compose.yml`:
 
-    ```yaml
-    postgres:
-      image: postgres:16-alpine
-      env_file: .env
-      volumes:
-        - postgres_data:/var/lib/postgresql/data
-      networks:
-        - app-network
-    ```
+  ```yaml
+  postgres:
+    image: postgres:16-alpine
+    env_file: .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+  ```
 
 * \[✅\] **1.A.3. Implantação:** 
 
@@ -81,7 +81,7 @@
   * \[✅\] Logs verificados: 
   ```bash
     docker compose logs postgres | grep "ready to accept"
-    ```
+  ```
 
 ### 1.B - Serviço Caddy \[▶️\]
 
@@ -103,20 +103,20 @@
 
   * \[✅\] Adicionar serviço ao `docker-compose.yml`:
 
-    ```yaml
-    caddy:
-      image: caddy:alpine
-      ports:
-        - "80:80"
-        - "443:443"
-      volumes:
-        - ./config/Caddyfile:/etc/caddy/Caddyfile
-        - caddy_data:/data
-        - caddy_config:/config
-      networks:
-        - app-network
-      restart: unless-stopped
-    ```
+  ```yaml
+  caddy:
+    image: caddy:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - app-network
+    restart: unless-stopped
+  ```
 
   * \[✅\] Adicionar variável ao `.env`:
 
@@ -171,28 +171,28 @@
 
   * \[✅\] Adicionar serviço ao `docker-compose.yml`:
 
-    ```yaml
-    n8n:
-      image: n8nio/n8n:latest
-      container_name: n8n
-      restart: unless-stopped
-      env_file:
-        - .env
-      environment:
-        - DB_TYPE=${N8N_DB_TYPE}
-        - DB_POSTGRESDB_HOST=${N8N_DB_POSTGRESDB_HOST}
-        - DB_POSTGRESDB_PORT=${N8N_DB_POSTGRESDB_PORT}
-        - DB_POSTGRESDB_USER=${N8N_DB_POSTGRESDB_USER}
-        - DB_POSTGRESDB_PASSWORD=${N8N_DB_POSTGRESDB_PASSWORD}
-        - DB_POSTGRESDB_DATABASE=${N8N_DB_POSTGRESDB_DATABASE}
-        - N8N_WEBHOOK_URL=${N8N_WEBHOOK_URL}
-        - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=${N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS}
-        - N8N_RUNNERS_ENABLED=${N8N_RUNNERS_ENABLED}
-        - N8N_HOST=n8n
-      networks:
-        - app-network
-      depends_on:
-        - postgres
+  ```yaml
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - DB_TYPE=${N8N_DB_TYPE}
+      - DB_POSTGRESDB_HOST=${N8N_DB_POSTGRESDB_HOST}
+      - DB_POSTGRESDB_PORT=${N8N_DB_POSTGRESDB_PORT}
+      - DB_POSTGRESDB_USER=${N8N_DB_POSTGRESDB_USER}
+      - DB_POSTGRESDB_PASSWORD=${N8N_DB_POSTGRESDB_PASSWORD}
+      - DB_POSTGRESDB_DATABASE=${N8N_DB_POSTGRESDB_DATABASE}
+      - N8N_WEBHOOK_URL=${N8N_WEBHOOK_URL}
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=${N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS}
+      - N8N_RUNNERS_ENABLED=${N8N_RUNNERS_ENABLED}
+      - N8N_HOST=n8n
+    networks:
+      - app-network
+    depends_on:
+      - postgres
     ```
 
   * \[✅\] Configurar proxy no `Caddyfile` (será feito na Fase 3.B após Authelia):
@@ -233,27 +233,27 @@
 
   * \[ \] Adicionar serviço ao `docker-compose.yml`:
 
-    ```yaml
-    homer:
-      image: b4bz/homer:latest
-      container_name: homer
-      volumes:
-        - ./config/homer:/www/assets
-      networks:
-        - app-network
-      restart: unless-stopped
-    ```
+  ```yaml
+  homer:
+    image: b4bz/homer:latest
+    container_name: homer
+    volumes:
+      - ./config/homer:/www/assets
+    networks:
+      - app-network
+    restart: unless-stopped
+  ```
 
   * \[ \] Configurar proxy no `Caddyfile` para o domínio raiz (será feito na Fase 3.B após Authelia):
 
-    ```caddy
-    galvani4987.duckdns.org {
-      # forward_auth http://authelia:9091 { # será adicionado após Authelia
-      #   uri /authelia
-      # }
-      reverse_proxy homer:8080
-    }
-    ```
+  ```caddy
+  galvani4987.duckdns.org {
+    # forward_auth http://authelia:9091 { # será adicionado após Authelia
+    #   uri /authelia
+    # }
+    reverse_proxy homer:8080
+  }
+  ```
 
 * \[ \] **2.B.3. Implantação:** 
 
@@ -299,46 +299,45 @@
 
   * \[ \] Adicionar serviço ao `docker-compose.yml`:
 
-    ```yaml
-    authelia:
-      image: authelia/authelia:latest
-      container_name: authelia
-      volumes:
-        - ./config/authelia:/config
-      environment:
-        - AUTHELIA_JWT_SECRET=${AUTHELIA_JWT_SECRET}
-        - AUTHELIA_SESSION_SECRET=${AUTHELIA_SESSION_SECRET}
-        - AUTHELIA_DUO_API_SECRET=${AUTHELIA_DUO_API_SECRET} # se usar Duo
-        - AUTHELIA_LOG_LEVEL=debug # ou info, warn, error
-      networks:
-        - app-network
-      depends_on:
-        - redis
-      restart: unless-stopped
-    ```
+  ```yaml
+  authelia:
+    image: authelia/authelia:latest
+    container_name: authelia
+    volumes:
+      - ./config/authelia:/config
+    environment:
+      - AUTHELIA_JWT_SECRET=${AUTHELIA_JWT_SECRET}
+      - AUTHELIA_SESSION_SECRET=${AUTHELIA_SESSION_SECRET}
+      - AUTHELIA_DUO_API_SECRET=${AUTHELIA_DUO_API_SECRET} # se usar Duo
+      - AUTHELIA_LOG_LEVEL=debug # ou info, warn, error
+    networks:
+      - app-network
+    depends_on:
+      - redis
+    restart: unless-stopped
+  ```
 
   * \[ \] Configurar `forward_auth` no `Caddyfile` para os serviços protegidos (Homer, n8n, Waha) e o subdomínio do Authelia:
 
-    ```caddy
-    authelia.galvani4987.duckdns.org {
-      reverse_proxy authelia:9091
+  ```caddy
+  authelia.galvani4987.duckdns.org {
+    reverse_proxy authelia:9091
+  }
+  galvani4987.duckdns.org {
+    forward_auth http://authelia:9091 {
+      uri /authelia
     }
+    reverse_proxy homer:8080
+  }
 
-    galvani4987.duckdns.org {
-      forward_auth http://authelia:9091 {
-        uri /authelia
-      }
-      reverse_proxy homer:8080
+  n8n.galvani4987.duckdns.org {
+    forward_auth http://authelia:9091 {
+      uri /authelia
     }
-
-    n8n.galvani4987.duckdns.org {
-      forward_auth http://authelia:9091 {
-        uri /authelia
-      }
-      reverse_proxy n8n:5678
-    }
-    # waha.galvani4987.duckdns.org (será adicionado na próxima fase)
-    ```
+    reverse_proxy n8n:5678
+  }
+  # waha.galvani4987.duckdns.org (será adicionado na próxima fase)
+  ```
 
 * \[ \] **3.B.3. Implantação:** 
 
@@ -352,30 +351,30 @@
 
   * \[ \] Adicionar serviço ao `docker-compose.yml`:
 
-    ```yaml
-    waha:
-      image: devlikeapro/waha:latest
-      container_name: waha
-      env_file:
-        - .env
-      environment:
-        - WAHA_DEBUG=${WAHA_DEBUG}
-        - WAHA_WEBHOOK_URL=${WAHA_WEBHOOK_URL}
-      networks:
-        - app-network
-      restart: unless-stopped
-    ```
+  ```yaml
+  waha:
+    image: devlikeapro/waha:latest
+    container_name: waha
+    env_file:
+      - .env
+    environment:
+      - WAHA_DEBUG=${WAHA_DEBUG}
+      - WAHA_WEBHOOK_URL=${WAHA_WEBHOOK_URL}
+    networks:
+      - app-network
+    restart: unless-stopped
+  ```
 
   * \[ \] Configurar proxy no `Caddyfile` com autenticação:
 
-    ```caddy
-    waha.galvani4987.duckdns.org {
-      forward_auth http://authelia:9091 {
-        uri /authelia
-      }
-      reverse_proxy waha:3000
+  ```caddy
+  waha.galvani4987.duckdns.org {
+    forward_auth http://authelia:9091 {
+      uri /authelia
     }
-    ```
+    reverse_proxy waha:3000
+  }
+  ```
 
 * \[ \] **3.C.3. Implantação:** 
 
