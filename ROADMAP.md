@@ -122,8 +122,8 @@
 
 ### 2.A - Serviço n8n (Automação) [ ]
 - [✅] **2.A.1. Pesquisa:** Configuração do n8n com PostgreSQL  
-- [ ] **2.A.2. Configuração:**  
-    - [ ] Adicionar variáveis ao `.env`:  
+- [✅] **2.A.2. Configuração:**  
+    - [✅] Adicionar variáveis ao `.env`:  
       ```env
       N8N_DB_TYPE=postgresdb
       N8N_DB_POSTGRESDB_HOST=postgres
@@ -132,10 +132,10 @@
       N8N_DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
       N8N_DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
       ```  
-    - [ ] Adicionar serviço ao `docker-compose.yml`  
-    - [ ] Configurar proxy no `Caddyfile`  
-- [ ] **2.A.3. Implantação:**  
-- [ ] **2.A.4. Verificação:**  
+    - [✅] Adicionar serviço ao `docker-compose.yml`  
+    - [✅] Configurar proxy no `Caddyfile`  
+- [✅] **2.A.3. Implantação:**  
+- [✅] **2.A.4. Verificação:**  
 
 ### 2.B - Serviço Homer (Dashboard Principal) [ ]
 - [ ] **2.B.1. Pesquisa:** Configuração do Homer  
