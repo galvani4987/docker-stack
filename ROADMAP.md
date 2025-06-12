@@ -217,7 +217,7 @@
 * \[ \] **2.B.1. Pesquisa:** Imagem oficial Homer, estrutura de configuração e como servir arquivos estáticos via Caddy.
 
 * \[ \] **2.B.2. Configuração:** 
-
+    * \[ \] Consulte o [Tutorial de Instalação do Homer](docs/setup_homer.md) para um guia detalhado de configuração e implantação.
   * \[ \] Criar diretório `config/homer` e adicionar o arquivo `config.yml` (exemplo básico):
 
   ```yaml
@@ -271,7 +271,7 @@
 * \[ \] **3.A.1. Pesquisa:** Imagem Redis oficial (`redis:alpine`) e como configurar volumes para persistência.
 
 * \[ \] **3.A.2. Configuração:** 
-
+    * \[ \] Consulte o [Tutorial de Instalação do Redis](docs/setup_redis.md) para um guia detalhado de configuração e implantação.
   * \[ \] Adicionar serviço ao `docker-compose.yml`:
 
   ```yaml
