@@ -156,7 +156,7 @@
 * \[✅\] **2.A.1. Pesquisa:** Configuração do n8n com PostgreSQL, variáveis de ambiente necessárias e integração com Caddy.
 
 * \[✅\] **2.A.2. Configuração:** 
-
+    * \[✅\] Consulte o [Tutorial de Instalação do n8n](docs/setup_n8n.md) para um guia detalhado de configuração e implantação.
   * \[✅\] Adicionar variáveis ao `.env`:
 
   ```env
