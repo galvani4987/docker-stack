@@ -90,7 +90,7 @@
 * \[✅\] **1.B.1. Pesquisa:** Imagem oficial Caddy e estrutura do Caddyfile
 
 * \[✅\] **1.B.2. Configuração:** 
-
+    * \[✅\] Consulte o [Tutorial de Configuração do Caddy](docs/setup_caddy.md) para um guia detalhado da sua configuração e funcionalidades neste projeto.
   * \[✅\] Criar arquivo `Caddyfile` básico:
 
   ```caddy
