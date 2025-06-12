@@ -5,3 +5,6 @@ version: '3.8'
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  - ./config/Caddyfile:/etc/caddy/Caddyfile

@@ -45,7 +45,7 @@ sudo bash clean-server.sh
 ### `manter_ativo.sh` (Cron Job)
 Script para manter serviços ativos (executado via cron):
 ```bash
-0 * * * * /home/ubuntu/scripts/manter_ativo.sh
+0 * * * * /home/ubuntu/docker-stack/scripts/manter_ativo.sh
 ```
 
 ## ⚙️ Implantação em um Novo Servidor

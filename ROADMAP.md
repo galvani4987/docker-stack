@@ -97,17 +97,21 @@
       CADDY_EMAIL=seu_email@provedor.com
       ```  
 - [ ] **1.B.3. Implantação:**  
-    - [ ] Executar: ```bash
+    - [ ] Executar: 
+      ```bash
       docker compose up -d caddy
       ```  
 - [ ] **1.B.4. Verificação:**  
-    - [ ] Verificar status: ```bash
+    - [ ] Verificar status: 
+      ```bash
       docker compose ps
       ```  
-    - [ ] Verificar logs: ```bash
+    - [ ] Verificar logs: 
+      ```bash
       docker compose logs caddy
       ```  
-    - [ ] Testar acesso: ```bash
+    - [ ] Testar acesso: 
+      ```bash
       curl https://galvani4987.duckdns.org
       ```  
 
