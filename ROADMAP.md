@@ -294,7 +294,7 @@
 * \[ \] **3.B.1. Pesquisa:** Documentação oficial do Authelia, configuração do `configuration.yml`, chaves para 2FA, e integração com Caddy via `forward_auth`.
 
 * \[ \] **3.B.2. Configuração:** 
-
+    * \[ \] Consulte o [Tutorial de Instalação do Authelia](docs/setup_authelia.md) para um guia detalhado de configuração e implantação.
   * \[ \] Criar diretório `config/authelia` com `configuration.yml` e `users.yml`.
 
   * \[ \] Adicionar segredos ao `.env` (ex: `AUTHELIA_JWT_SECRET`, `AUTHELIA_SESSION_SECRET`, `AUTHELIA_DUO_API_SECRET`, `AUTHELIA_ADMIN_PASSWORD`).
