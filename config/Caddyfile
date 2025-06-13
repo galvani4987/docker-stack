@@ -1,5 +1,5 @@
 {
-    email galvani4987@gmail.com
+    email ${CADDY_EMAIL}
 }
 
 galvani4987.duckdns.org {

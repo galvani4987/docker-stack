@@ -27,7 +27,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./config/Caddyfile:/etc/caddy/Caddyfile
+      - ./config:/etc/caddy # Mounts the whole config directory
       - caddy_data:/data
       - caddy_config:/config
     networks:
@@ -51,12 +51,18 @@ services:
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=${N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS}
       - N8N_RUNNERS_ENABLED=${N8N_RUNNERS_ENABLED}
       - N8N_HOST=n8n
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE:-America/Sao_Paulo} # Default if not in .env
+      - TZ=${TZ:-America/Sao_Paulo} # Default if not in .env
+    volumes:
+      - n8n_data:/home/node/.n8n
     networks:
       - app-network
     depends_on:
-      - postgres
+      postgres:
+        condition: service_started
 
 volumes:
   postgres_data:
   caddy_data:
   caddy_config:
+  n8n_data:
