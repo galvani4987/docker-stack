@@ -64,7 +64,7 @@ services:
         condition: service_started
 
   redis:
-    image: redis:alpine
+    image: redis:7.4.4-alpine
     container_name: redis
     restart: unless-stopped
     command: redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
@@ -114,7 +114,7 @@ services:
       # - GID=1000 # Not strictly needed
 
   waha:
-    image: devlikeapro/waha:latest # Using the latest tag as per docs
+    image: devlikeapro/waha:arm # Using the latest tag as per docs
     container_name: waha
     restart: unless-stopped
     env_file:
