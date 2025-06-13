@@ -478,7 +478,7 @@
         *   **Segurança dos Backups:** Backups contêm dados sensíveis (incluindo o `.env`). Devem ser protegidos adequadamente, especialmente se enviados para locais remotos (a criptografia com `restic` ou GPG é recomendada).
 
 * \[▶️] **5.2. Configuração:**
-    *   \[ ] Criar script `scripts/backup.sh` para backup dos volumes do Docker e dados do PostgreSQL.
+    *   \[✅] Criar script `scripts/backup.sh` para backup dos volumes do Docker e dados do PostgreSQL.
     *   \[ ] Adicionar script `scripts/restore.sh` para facilitar a recuperação.
     *   \[ ] Configurar cron job diário para o script de backup.
 
