@@ -469,15 +469,11 @@
         *   Os scripts irão parar os containers relevantes (para garantir consistência dos dados onde necessário), executar os dumps de banco de dados, e arquivar os volumes/diretórios de configuração usando `tar` com compressão (gzip).
         *   Os backups serão armazenados localmente em um diretório dedicado no host.
 
-    4.  **Ferramentas e Opções Avançadas (Considerações Futuras):**
-        *   **`restic`:** Recomendado como uma ferramenta robusta para backups futuros ou para usuários avançados. Oferece deduplicação, criptografia e integração com múltiplos backends de armazenamento (local, S3, B2, SFTP, etc.). Pode ser integrado aos scripts shell.
-        *   **`rclone`:** Para sincronização dos backups locais com serviços de armazenamento em nuvem.
-
-    5.  **Frequência e Retenção:**
+    4.  **Frequência e Retenção:**
         *   **Frequência Sugerida:** Diária (automatizada via cron).
         *   **Retenção Sugerida:** Manter os últimos 7-30 backups diários (configurável pelo usuário).
 
-    6.  **Considerações Importantes:**
+    5.  **Considerações Importantes:**
         *   **Downtime:** A estratégia de parar containers para backup de volumes garante maior consistência, mas implica em um curto período de indisponibilidade dos serviços. Alternativas (como snapshots LVM, se aplicável ao host) podem ser consideradas para cenários mais exigentes.
         *   **Segurança dos Backups:** Backups contêm dados sensíveis (incluindo o `.env`). Devem ser protegidos adequadamente, especialmente se enviados para locais remotos (a criptografia com `restic` ou GPG é recomendada).
 
