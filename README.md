@@ -133,8 +133,7 @@ docker compose logs caddy
 ```bash
 docker compose logs redis authelia
 ```
-   * Valide configurações no `config/authelia/configuration.yml` (após configuração do Authelia):
-   * Valide configurações no `config/authelia/configuration.yml` (após configuração do Authelia):
+      * Valide configurações no `config/authelia/configuration.yml` (após configuração do Authelia):
 
 3. **Serviços não comunicando:**
 
@@ -142,8 +141,7 @@ docker compose logs redis authelia
 ```bash
 docker network inspect app-network
 ```
-   * Teste conectividade entre containers:
-   * Teste conectividade entre containers:
+      * Teste conectividade entre containers:
 ```bash
 docker exec -it <container> ping <outro-container>
 ```
