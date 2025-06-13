@@ -136,7 +136,7 @@ else
     # Proceed if POSTGRES_CONTAINER_ID is now set
     if [ -n "${POSTGRES_CONTAINER_ID:-}" ]; then
         log_message "INFO: Found/Started PostgreSQL container ID: ${POSTGRES_CONTAINER_ID}"
-        PG_DUMP_FILENAME="postgres_dump_${TIMESTAMP}.sql"
+        PG_DUMP_FILENAME="postgres_dump.sql" # Removed timestamp
         PG_DUMP_PATH="${CURRENT_BACKUP_DIR}/${PG_DUMP_FILENAME}"
 
         # Use PGPASSWORD environment variable for pg_dumpall
@@ -185,7 +185,7 @@ if docker compose -f "${DOCKER_COMPOSE_FILE}" stop "${REDIS_SERVICE_NAME}"; then
         log_message "ERROR: Redis volume mount point '${REDIS_VOLUME_MOUNTPOINT}' does not exist or is not a directory. Skipping Redis backup."
     else
         log_message "INFO: Found Redis volume mount point: ${REDIS_VOLUME_MOUNTPOINT}"
-        REDIS_BACKUP_FILENAME="redis_data_${TIMESTAMP}.tar.gz"
+        REDIS_BACKUP_FILENAME="redis_data.tar.gz" # Removed timestamp
         REDIS_BACKUP_PATH="${CURRENT_BACKUP_DIR}/${REDIS_BACKUP_FILENAME}"
 
         log_message "INFO: Archiving Redis data from ${REDIS_VOLUME_MOUNTPOINT} to ${REDIS_BACKUP_PATH}..."
@@ -209,7 +209,7 @@ MAPPED_CONFIG_SUBDIRS="authelia caddy homer waha" # Add other config subdirs if 
 
 for subdir_name in ${MAPPED_CONFIG_SUBDIRS}; do
     source_path="${MAPPED_CONFIG_DIRS_PARENT}/${subdir_name}"
-    backup_filename="config_${subdir_name}_${TIMESTAMP}.tar.gz"
+    backup_filename="config_${subdir_name}.tar.gz" # Removed timestamp
     backup_filepath="${CURRENT_BACKUP_DIR}/${backup_filename}"
 
     if [ -d "${source_path}" ]; then
@@ -234,7 +234,7 @@ DOCKER_VOLUMES_TO_BACKUP="n8n_data caddy_data caddy_config" # Add other key volu
 for volume_suffix in ${DOCKER_VOLUMES_TO_BACKUP}; do
     full_volume_name="${COMPOSE_PROJECT_NAME}_${volume_suffix}"
     volume_mountpoint=$(docker volume inspect "${full_volume_name}" -f '{{ .Mountpoint }}' 2>/dev/null)
-    backup_filename="volume_${volume_suffix}_${TIMESTAMP}.tar.gz"
+    backup_filename="volume_${volume_suffix}.tar.gz" # Removed timestamp
     backup_filepath="${CURRENT_BACKUP_DIR}/${backup_filename}"
 
     if [ -z "${volume_mountpoint}" ]; then
