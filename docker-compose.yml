@@ -30,6 +30,8 @@ services:
       - ./config:/etc/caddy # Mounts the whole config directory
       - caddy_data:/data
       - caddy_config:/config
+    env_file: # Add env_file to load .env variables
+      - .env
     networks:
       - app-network
     restart: unless-stopped

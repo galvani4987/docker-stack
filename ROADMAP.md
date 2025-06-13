@@ -209,8 +209,9 @@
   ```
 
 * \[ \] **2.A.3. Implantação:** 
-
+  - `[Detalhes pendentes]`
 * \[ \] **2.A.4. Verificação:** 
+  - `[Detalhes pendentes]`
 
 ### 2.B - Serviço Homer (Dashboard Principal) \[ \]
 
@@ -258,8 +259,9 @@
   ```
 
 * \[ \] **2.B.3. Implantação:** 
-
+  - `[Detalhes pendentes]`
 * \[ \] **2.B.4. Verificação:** 
+  - `[Detalhes pendentes]`
 ---
 
 ## Fase 3: Segurança e Serviços Especializados \[ \]
@@ -286,8 +288,9 @@
   ```
 
 * \[ \] **3.A.3. Implantação:** 
-
+  - `[Detalhes pendentes]`
 * \[ \] **3.A.4. Verificação:** 
+  - `[Detalhes pendentes]`
 
 ### 3.B - Serviço Authelia (Portal de Autenticação) \[ \]
 
@@ -342,8 +345,9 @@
   ```
 
 * \[ \] **3.B.3. Implantação:** 
-
+  - `[Detalhes pendentes]`
 * \[ \] **3.B.4. Verificação:** 
+  - `[Detalhes pendentes]`
 
 ### 3.C - Serviço Waha (WhatsApp Gateway) \[ \]
 
@@ -381,8 +385,9 @@
   ```
 
 * \[ \] **3.C.3. Implantação:** 
-
+  - `[Detalhes pendentes]`
 * \[ \] **3.C.4. Verificação:** 
+  - `[Detalhes pendentes]`
 
 ---
 
@@ -394,7 +399,8 @@
 
 * \[✅\] **4.2. Implantação:** - \[✅\] Instalação via `bootstrap.sh` (O script já inclui `apt-get install -y cockpit` e `systemctl enable --now cockpit.socket`).
 
-* \[ \] **4.3. Verificação:** - \[ \] Acesso em `https://<IP>:9090`
+* \[ \] **4.3. Verificação:**
+  - `[Detalhes pendentes]` Acesso em `https://<IP>:9090`
 
 ## Fase 5: Finalização e Backup \[ \]
 
@@ -411,7 +417,7 @@
   * \[ \] Configurar cron job diário para o script de backup.
 
 * \[ \] **5.3. Verificação:** 
-
+  - `[Detalhes pendentes]`
   * \[ \] Teste de backup/restore (simular um desastre para garantir a recuperação).
 
 ## Progresso Atual

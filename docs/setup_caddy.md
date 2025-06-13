@@ -27,7 +27,15 @@ CADDY_EMAIL=seu_email@exemplo.com
     email ${CADDY_EMAIL}
 }
 ```
-Esta abordagem permite que o email seja configurado de forma flexível sem modificar diretamente o `Caddyfile`. Certifique-se de que a variável `CADDY_EMAIL` esteja corretamente definida no seu arquivo `.env`.
+Esta abordagem permite que o email seja configurado de forma flexível sem modificar diretamente o `Caddyfile`.
+
+**Como funciona:**
+O email utilizado para o registro de certificados SSL (ACME) é configurado dinamicamente usando a variável de ambiente `CADDY_EMAIL`. No arquivo `Caddyfile`, você vê a diretiva `email ${CADDY_EMAIL}` (as chaves `{}` podem ser opcionais em algumas sintaxes do Caddy, mas a forma `${VAR}` é a interpolação padrão de variável de ambiente). Para que isso funcione:
+1.  Certifique-se de que a variável `CADDY_EMAIL` está definida com seu endereço de email no arquivo `.env` na raiz do projeto (ex: `CADDY_EMAIL=seuemail@dominio.com`). Este é um passo **obrigatório**.
+2.  A configuração do serviço `caddy` no arquivo `docker-compose.yml` inclui a diretiva `env_file: - .env`. Esta linha é crucial, pois faz com que todas as variáveis definidas no seu arquivo `.env` sejam carregadas para dentro do ambiente do container do Caddy.
+3.  Com a variável `CADDY_EMAIL` disponível dentro do container, o Caddy pode então substituir o placeholder `${CADDY_EMAIL}` no `Caddyfile` pelo valor real fornecido, usando-o para o processo de obtenção de certificados SSL.
+
+Certifique-se de que a variável `CADDY_EMAIL` esteja corretamente definida no seu arquivo `.env` na raiz do projeto.
 
 ## 3. Configuração no `docker-compose.yml`
 
