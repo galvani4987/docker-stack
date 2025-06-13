@@ -120,28 +120,31 @@ Comandos úteis para operação do sistema:
 Problemas comuns e soluções:
 
 1. **Certificados SSL não gerados:**
+
    - Verifique se o DNS está apontando corretamente
    - Confira os logs do Caddy:
-\`\`\`bash
+```bash
 docker compose logs caddy
-\`\`\`
+```
 
 2. **Autenticação falhando (quando Authelia estiver implementado):**
+
    - Verifique conexão com Redis:
-\`\`\`bash
+```bash
 docker compose logs redis authelia
-\`\`\`
+```
    - Valide configurações no `config/authelia/configuration.yml` (após configuração do Authelia)
 
 3. **Serviços não comunicando:**
+
    - Verifique rede Docker:
-\`\`\`bash
+```bash
 docker network inspect app-network
-\`\`\`
+```
    - Teste conectividade entre containers:
-\`\`\`bash
-     docker exec -it <container> ping <outro-container>
-     ```
+```bash
+docker exec -it <container> ping <outro-container>
+```
 
 ## 🤝 Contribuição
 Contribuições são bem-vindas! Siga o fluxo:
