@@ -140,7 +140,7 @@ docker network inspect app-network
 ```
    - Teste conectividade entre containers:
 ```bash
-     docker exec -it <container> ping <outro-container>
+docker exec -it <container> ping <outro-container>
 ```
 
 ## 🤝 Contribuição
