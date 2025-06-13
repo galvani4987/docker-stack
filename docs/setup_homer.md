@@ -116,7 +116,7 @@ Modifique seu `config/Caddyfile` para adicionar ou ajustar a entrada para o dom�
 
 ```caddy
 {
-    email galvani4987@gmail.com # Seu email para certificados SSL
+    email ${CADDY_EMAIL} # Seu email para certificados SSL (obtido do .env)
     # ... outras configurações globais ...
 }
 

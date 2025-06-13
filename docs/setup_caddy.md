@@ -14,15 +14,20 @@ A configuração base do Caddy já está definida nos arquivos `docker-compose.y
 
 ## 2. Variáveis de Ambiente (`.env`)
 
-Para a configuração do Caddy neste projeto, o email para os certificados SSL é atualmente definido diretamente no `Caddyfile`. O `ROADMAP.md` originalmente mencionava uma variável `CADDY_EMAIL`, mas a implementação atual é:
+Para a configuração do Caddy neste projeto, o email para os certificados SSL é configurado usando uma variável de ambiente. O arquivo `config/Caddyfile` utiliza `${CADDY_EMAIL}` no bloco de opções globais, e esta variável deve ser definida no seu arquivo `.env`.
+
+**`.env` (exemplo de variável):**
+```env
+CADDY_EMAIL=seu_email@exemplo.com
+```
 
 **`config/Caddyfile` (trecho do bloco global):**
 ```caddy
 {
-    email galvani4987@gmail.com
+    email ${CADDY_EMAIL}
 }
 ```
-Se você preferir usar uma variável de ambiente para o email (recomendado para flexibilidade), você modificaria seu `Caddyfile` para algo como `email {$CADDY_EMAIL}` e adicionaria `CADDY_EMAIL=seu_email@exemplo.com` ao seu arquivo `.env`. Por enquanto, este tutorial documenta o uso do email diretamente no `Caddyfile`.
+Esta abordagem permite que o email seja configurado de forma flexível sem modificar diretamente o `Caddyfile`. Certifique-se de que a variável `CADDY_EMAIL` esteja corretamente definida no seu arquivo `.env`.
 
 ## 3. Configuração no `docker-compose.yml`
 
@@ -78,7 +83,8 @@ O arquivo `config/Caddyfile` define como o Caddy gerencia seus sites. Ele consis
 ```caddy
 {
     # Email para registro de certificados SSL com Let's Encrypt
-    email galvani4987@gmail.com
+    # Esta variável é obtida do arquivo .env
+    email ${CADDY_EMAIL}
 
     # Outras opções globais podem ser adicionadas aqui
     # ex: acme_dns duckdns seu_token_duckdns

@@ -279,7 +279,7 @@ Atualize seu `config/Caddyfile` para adicionar o portal Authelia e proteger seus
 
 ```caddy
 {
-    email galvani4987@gmail.com
+    email ${CADDY_EMAIL} # Obtido do .env
     # default_sni seu_dominio_principal.com # Se necessário
 }
 
