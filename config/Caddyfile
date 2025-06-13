@@ -44,11 +44,11 @@ cockpit.galvani4987.duckdns.org {
     }
 }
 
-# --- WAHA (WhatsApp Gateway) - Placeholder, será configurado e protegido pelo Authelia ---
-# waha.galvani4987.duckdns.org {
-#    reverse_proxy waha:3000 # Assuming waha service on port 3000
-#    forward_auth authelia:9091 {
-#        uri /api/verify?rd=https://authelia.galvani4987.duckdns.org/
-#        copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
-#    }
-# }
+# --- WAHA (WhatsApp Gateway) - Protegido pelo Authelia ---
+waha.galvani4987.duckdns.org {
+   reverse_proxy waha:3000 # Assuming waha service on port 3000
+   forward_auth authelia:9091 {
+       uri /api/verify?rd=https://authelia.galvani4987.duckdns.org/
+       copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
+   }
+}

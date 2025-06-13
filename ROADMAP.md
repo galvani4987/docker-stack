@@ -220,13 +220,13 @@
 * \[ \] **2.A.4. Verificação:** 
   - `[Detalhes pendentes]`
 
-### 2.B - Serviço Homer (Dashboard Principal) \[ \]
+### 2.B - Serviço Homer (Dashboard Principal) \[✅\]
 
-* \[ \] **2.B.1. Pesquisa:** Imagem oficial Homer, estrutura de configuração e como servir arquivos estáticos via Caddy.
+* \[✅\] **2.B.1. Pesquisa:** Imagem oficial Homer, estrutura de configuração e como servir arquivos estáticos via Caddy.
 
-* \[ \] **2.B.2. Configuração:** 
-    * \[ \] Consulte o [Tutorial de Instalação do Homer](docs/setup_homer.md) para um guia detalhado de configuração e implantação.
-  * \[ \] Criar diretório `config/homer` e adicionar o arquivo `config.yml` (exemplo básico):
+* \[✅\] **2.B.2. Configuração:**
+    * \[✅\] Consulte o [Tutorial de Instalação do Homer](docs/setup_homer.md) para um guia detalhado de configuração e implantação.
+  * \[✅\] Criar diretório `config/homer` e adicionar o arquivo `config.yml` (exemplo básico):
 
   ```yaml
   # config.yml para Homer
@@ -247,14 +247,17 @@
   homer:
     image: b4bz/homer:latest
     container_name: homer
+    user: "1000:1000" # UID:GID do host para permissões de ./config/homer
     volumes:
       - ./config/homer:/www/assets
     networks:
       - app-network
     restart: unless-stopped
+    environment:
+      - INIT_ASSETS=0 # Não reinicializar assets, pois config.yml é gerenciado
   ```
 
-  * \[ \] Configurar proxy no `Caddyfile` para o domínio raiz (será feito na Fase 3.B após Authelia):
+  * \[✅\] Configurar proxy no `Caddyfile` para o domínio raiz (será feito na Fase 3.B após Authelia):
 
   ```caddy
   galvani4987.duckdns.org {
@@ -265,10 +268,10 @@
   }
   ```
 
-* \[ \] **2.B.3. Implantação:** 
-  - `[Detalhes pendentes]`
-* \[ \] **2.B.4. Verificação:** 
-  - `[Detalhes pendentes]`
+* \[✅\] **2.B.3. Implantação:**
+  - Adicionado ao `docker-compose.yml`. Use `docker compose up -d homer` para iniciar.
+* \[✅\] **2.B.4. Verificação:**
+  - Acessar `https://galvani4987.duckdns.org` (ou seu domínio raiz). Verificar logs com `docker compose logs homer`.
 ---
 
 ## Fase 3: Segurança e Serviços Especializados \[✅\]
@@ -370,31 +373,38 @@
 * \[✅\] **3.B.4. Verificação:**
   - Verificar logs com `docker compose logs authelia`. Testar login no portal Authelia e acesso a uma rota protegida.
 
-### 3.C - Serviço Waha (WhatsApp Gateway) \[ \]
+### 3.C - Serviço Waha (WhatsApp Gateway) \[✅\]
 
-* \[ \] **3.C.1. Pesquisa:** Imagem oficial Waha (`devlikeapro/waha`), variáveis de ambiente para configuração (ex: `WAHA_DEBUG`, `WAHA_WEBHOOK_URL`).
+* \[✅\] **3.C.1. Pesquisa:** Imagem oficial Waha (`devlikeapro/waha:latest`), variáveis de ambiente para configuração (ex: `WAHA_DEBUG`, `WAHA_WEBHOOK_URL`, `WHATSAPP_API_KEY`).
 
-* \[ \] **3.C.2. Configuração:**
-    * \[ \] Consulte o [Tutorial de Instalação do WAHA](docs/setup_waha.md) para um guia detalhado de configuração e implantação.
-  * \[ \] Adicionar variáveis ao `.env` (ex: `WAHA_DEBUG=false`, `WAHA_WEBHOOK_URL=<seu_webhook_url>`).
+* \[✅\] **3.C.2. Configuração:**
+    * \[✅\] Consulte o [Tutorial de Instalação do WAHA](docs/setup_waha.md) para um guia detalhado de configuração e implantação.
+  * \[✅\] Adicionar variáveis ao `.env` (ex: `WAHA_DEBUG=false`, `WHATSAPP_HOOK_URL`, `WHATSAPP_API_KEY`, etc., conforme `docs/setup_waha.md`).
 
-  * \[ \] Adicionar serviço ao `docker-compose.yml`:
+  * \[✅\] Adicionar serviço ao `docker-compose.yml`:
 
   ```yaml
   waha:
     image: devlikeapro/waha:latest
     container_name: waha
+    restart: unless-stopped
     env_file:
       - .env
-    environment:
-      - WAHA_DEBUG=${WAHA_DEBUG}
-      - WAHA_WEBHOOK_URL=${WAHA_WEBHOOK_URL}
+    # ports: # Comentado por padrão após configuração inicial
+    #   - "127.0.0.1:3000:3000"
+    volumes:
+      - ./config/waha/sessions:/app/.sessions
+      - ./config/waha/media:/app/.media
     networks:
       - app-network
-    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
   ```
 
-  * \[ \] Configurar proxy no `Caddyfile` com autenticação:
+  * \[✅\] Configurar proxy no `Caddyfile` com autenticação:
 
   ```caddy
   waha.galvani4987.duckdns.org {
@@ -405,10 +415,10 @@
   }
   ```
 
-* \[ \] **3.C.3. Implantação:** 
-  - `[Detalhes pendentes]`
-* \[ \] **3.C.4. Verificação:** 
-  - `[Detalhes pendentes]`
+* \[✅\] **3.C.3. Implantação:**
+  - Adicionado ao `docker-compose.yml`. Use `docker compose up -d waha` para iniciar. Configuração inicial (QR code) pode exigir expor a porta temporariamente.
+* \[✅\] **3.C.4. Verificação:**
+  - Verificar logs com `docker compose logs waha`. Testar endpoints da API após autenticação e configuração da sessão do WhatsApp.
 
 ---
 

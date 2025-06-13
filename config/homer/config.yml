@@ -19,14 +19,32 @@ services:
         tag: "infra" # Optional tag
         url: "https://cockpit.galvani4987.duckdns.org"
         target: "_blank" # Open in new tab
-  # You can add other groups or services here
-  # For example, a group for 'Network Services' or 'Automation'
-  # - name: "Automation"
-  #   icon: "fas fa-robot"
-  #   items:
-  #     - name: "n8n"
-  #       icon: "fas fa-cogs" # or use n8n specific logo if available
-  #       subtitle: "Workflow Automation"
-  #       url: "https://n8n.galvani4987.duckdns.org" # Assuming n8n is set up
-  #       target: "_blank"
+
+  - name: "Automation"
+    icon: "fas fa-cogs" # Using fas fa-cogs as per original commented example
+    items:
+      - name: "n8n"
+        icon: "fas fa-robot" # Changed to fas fa-robot as per prompt's example for n8n
+        subtitle: "Workflow Automation"
+        url: "https://n8n.galvani4987.duckdns.org" # Assuming n8n is set up
+        target: "_blank"
+
+  - name: "Security"
+    icon: "fas fa-shield-alt"
+    items:
+      - name: "Authelia"
+        icon: "fas fa-user-shield"
+        subtitle: "Authentication Portal"
+        url: "https://authelia.galvani4987.duckdns.org"
+        target: "_blank"
+
+  - name: "Communication"
+    icon: "fas fa-comments" # Icon for the group
+    items:
+      - name: "Waha (WhatsApp)"
+        icon: "fab fa-whatsapp" # Font Awesome WhatsApp icon
+        subtitle: "WhatsApp HTTP API Gateway"
+        tag: "integration" # Optional tag
+        url: "https://waha.galvani4987.duckdns.org"
+        target: "_blank" # Optional: Open in new tab
 ```

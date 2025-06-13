@@ -99,6 +99,42 @@ services:
     #   retries: 3
     #   start_period: 30s
 
+  homer:
+    image: b4bz/homer:latest
+    container_name: homer
+    user: "1000:1000" # Ensure this is appropriate for your host system's permissions for ./config/homer
+    volumes:
+      - ./config/homer:/www/assets
+    networks:
+      - app-network
+    restart: unless-stopped
+    environment:
+      - INIT_ASSETS=0 # Prevents re-initialization of assets on every start if config.yml is managed by user
+      # - UID=1000 # Not strictly needed if user: "1000:1000" is set and image supports it
+      # - GID=1000 # Not strictly needed
+
+  waha:
+    image: devlikeapro/waha:latest # Using the latest tag as per docs
+    container_name: waha
+    restart: unless-stopped
+    env_file:
+      - .env
+    # Ports are commented out by default after initial QR scan.
+    # For initial setup, uncomment to scan QR code via http://localhost:3000 or http://<server_ip>:3000
+    # Make sure your server's firewall allows port 3000 if accessing remotely for setup.
+    # ports:
+    #   - "127.0.0.1:3000:3000" # Expose only on host for security during setup
+    volumes:
+      - ./config/waha/sessions:/app/.sessions # Persistent sessions
+      - ./config/waha/media:/app/.media       # Persistent media files
+    networks:
+      - app-network
+    logging: # Recommended logging configuration from WAHA docs
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
 volumes:
   postgres_data:
   caddy_data:
