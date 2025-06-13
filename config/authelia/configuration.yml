@@ -1,0 +1,108 @@
+# config/authelia/configuration.yml
+
+# URL padrão para redirecionamento se Authelia for acessado diretamente
+# Pode ser sobrescrito por AUTHELIA_SERVER_DEFAULT_REDIRECT_URL
+default_redirection_url: https://galvani4987.duckdns.org/
+
+# Configurações do servidor Authelia
+server:
+  host: 0.0.0.0
+  port: 9091
+  # trusted_proxies: # Adicione IPs/ranges da sua rede Docker se necessário, ex: ['172.16.0.0/12']
+  #   - '10.0.0.0/8'
+  #   - '172.16.0.0/12'
+  #   - '192.168.0.0/16'
+
+# Nível de Log - pode ser sobrescrito por AUTHELIA_LOG_LEVEL
+log:
+  level: info
+
+# Segredo JWT global (usado se um segredo específico não for definido em outro lugar)
+jwt_secret: "" # Será preenchido por AUTHELIA_JWT_SECRET
+
+# Configuração da sessão
+session:
+  # Segredo para criptografar dados da sessão no Redis
+  secret: "" # Será preenchido por AUTHELIA_SESSION_SECRET
+
+  # Configuração do cookie de sessão principal
+  # Estes são valores padrão, a seção 'cookies' abaixo é mais específica e recomendada.
+  name: authelia_session
+  expiration: 1h      # 1 hora
+  inactivity: 5m      # 5 minutos
+  remember_me: 1M     # 1 Mês (se "lembrar-me" for marcado)
+  same_site: lax
+
+  # Configuração específica do(s) domínio(s) do cookie
+  # Esta seção é OBRIGATÓRIA e não pode ser totalmente definida por env vars.
+  cookies:
+    - domain: "galvani4987.duckdns.org" # Domínio principal que Authelia protegerá
+      authelia_url: "https://authelia.galvani4987.duckdns.org" # URL do portal Authelia
+      default_redirection_url: "https://galvani4987.duckdns.org" # Para onde ir após login
+      # Outras opções como name, same_site, expiration, inactivity, remember_me podem ser herdadas ou especificadas aqui.
+
+  # Configuração do Redis para armazenamento de sessão
+  redis:
+    host: "redis" # Nome do serviço Redis no Docker Compose
+    port: 6379
+    password: ""    # Será preenchido por AUTHELIA_SESSION_REDIS_PASSWORD
+    # username: ""    # Geralmente não necessário para Redis com autenticação por senha simples
+    database_index: 0 # Banco de dados Redis a ser usado (0 é o padrão)
+    # maximum_active_connections: 8
+    # minimum_idle_connections: 0
+
+# Provedor de autenticação (primeiro fator)
+authentication_backend:
+  file:
+    path: /config/users.yml # Caminho para o arquivo de banco de dados de usuários dentro do container
+    # Configurações de hashing de senha (Argon2 é o padrão e recomendado)
+    password:
+      algorithm: argon2id
+      iterations: 3
+      memory: 65536       # Em KiB
+      parallelism: 4
+      key_length: 32
+      salt_length: 16
+    # watch: true # Opcional: recarrega users.yml em mudanças (pode não ser ideal em Docker)
+
+# Armazenamento persistente para dados do Authelia (ex: segredos TOTP, registros de regulação)
+storage:
+  # Chave para criptografar dados no banco de dados
+  encryption_key: "" # Será preenchido por AUTHELIA_STORAGE_ENCRYPTION_KEY
+
+  # Configuração do PostgreSQL
+  postgres:
+    host: "postgres" # Nome do serviço PostgreSQL no Docker Compose
+    port: 5432
+    database: ""     # Será preenchido por AUTHELIA_STORAGE_POSTGRES_DATABASE
+    username: ""     # Será preenchido por AUTHELIA_STORAGE_POSTGRES_USERNAME
+    password: ""     # Será preenchido por AUTHELIA_STORAGE_POSTGRES_PASSWORD
+    schema: "authelia" # Schema dedicado dentro do banco de dados principal
+    sslmode: "disable" # Para conexões internas na rede Docker sem SSL
+
+# Notificador (para reset de senha, registro de 2FA, etc.)
+notifier:
+  # Usando o sistema de arquivos para simplificar o setup inicial
+  # Para produção, configure o SMTP: https://www.authelia.com/configuration/notifications/smtp/
+  filesystem:
+    filename: /config/notifications.txt # Caminho dentro do container
+
+# Configuração de Autenticação de Dois Fatores (TOTP é o padrão)
+totp:
+  issuer: "Authelia - MeuServidor" # Nome do emissor que aparece no app autenticador
+
+# Política de Acesso Padrão (inicialmente permissiva para o domínio configurado)
+access_control:
+  default_policy: deny # 'deny' é mais seguro por padrão
+  rules:
+    - domain: "*.galvani4987.duckdns.org" # Aplica a todos os subdomínios principais
+      policy: one_factor # Requer um fator de autenticação (login/senha) para os serviços gerais
+      # Para testes iniciais, 'bypass' pode ser usado temporariamente em vez de 'one_factor'.
+      # Após configurar usuários e testar, mude para 'one_factor' ou 'two_factor'.
+    - domain: "cockpit.galvani4987.duckdns.org"
+      policy: two_factor # Cockpit é mais sensível, requer 2FA
+      subject: "group:admins" # Apenas usuários no grupo 'admins' podem acessar
+    # Adicione aqui regras mais específicas para outros serviços se necessário
+    # Ex: n8n.galvani4987.duckdns.org policy: two_factor
+    # Ex: homer.galvani4987.duckdns.org policy: one_factor
+```

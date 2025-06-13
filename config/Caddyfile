@@ -9,7 +9,21 @@ galvani4987.duckdns.org {
 n8n.galvani4987.duckdns.org {
     reverse_proxy n8n:5678 {
         header_up Host {host}
-        header_up X-Real-IP {remote}
+        header_up X-Real-IP {remote} # {remote} is <ip>:<port>, {client_ip} is just <ip>
         header_up X-Forwarded-Proto {scheme}
+    }
+}
+
+cockpit.galvani4987.duckdns.org {
+    reverse_proxy host.docker.internal:9090 {
+        # Using {client_ip} which is Caddy's placeholder for the client's IP address
+        header_up Host {host} # Preserve original host header
+        header_up X-Real-IP {client_ip}
+        header_up X-Forwarded-For {client_ip}
+        header_up X-Forwarded-Proto {scheme}
+    }
+    forward_auth authelia:9091 {
+        uri /api/verify?rd=https://authelia.galvani4987.duckdns.org/
+        copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
     }
 }

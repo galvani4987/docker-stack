@@ -1,0 +1,32 @@
+# config/homer/config.yml
+---
+title: "Server Dashboard"
+subtitle: "My Self-Hosted Services"
+# Optional: logo: "assets/logo.png" # You can add a general logo for the dashboard here
+# Optional: header: true
+# Optional: footer: '<p>Created with <span class="has-text-danger">❤️</span> by <a href="https://github.com/bastienwirtz/homer">Homer</a></p>'
+
+# Optional: columns: "3" # "auto" or number (1-6, 12)
+# Optional: connectivityCheck: true # true or false, checks if services are reachable
+
+services:
+  - name: "Management"
+    icon: "fas fa-server" # Icon for the Management group
+    items:
+      - name: "Cockpit"
+        icon: "fas fa-server" # Font Awesome icon for Cockpit
+        subtitle: "Server Management Interface"
+        tag: "infra" # Optional tag
+        url: "https://cockpit.galvani4987.duckdns.org"
+        target: "_blank" # Open in new tab
+  # You can add other groups or services here
+  # For example, a group for 'Network Services' or 'Automation'
+  # - name: "Automation"
+  #   icon: "fas fa-robot"
+  #   items:
+  #     - name: "n8n"
+  #       icon: "fas fa-cogs" # or use n8n specific logo if available
+  #       subtitle: "Workflow Automation"
+  #       url: "https://n8n.galvani4987.duckdns.org" # Assuming n8n is set up
+  #       target: "_blank"
+```
