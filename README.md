@@ -133,7 +133,7 @@ docker compose logs caddy
 ```bash
 docker compose logs redis authelia
 ```
-   - Valide configurações no `config/authelia/configuration.yml` (após configuração do Authelia)
+   - Valide configurações no `config/authelia/configuration.yml` (após configuração do Authelia):
 
 3. **Serviços não comunicando:**
 
