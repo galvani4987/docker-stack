@@ -479,7 +479,7 @@
 
 * \[▶️] **5.2. Configuração:**
     *   \[✅] Criar script `scripts/backup.sh` para backup dos volumes do Docker e dados do PostgreSQL.
-    *   \[ ] Adicionar script `scripts/restore.sh` para facilitar a recuperação.
+    *   \[✅] Adicionar script `scripts/restore.sh` para facilitar a recuperação.
     *   \[ ] Configurar cron job diário para o script de backup.
 
     **Esboço Detalhado para `scripts/backup.sh`:**
