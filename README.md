@@ -136,7 +136,7 @@ docker compose logs redis authelia
    * Valide configurações no `config/authelia/configuration.yml` (após configuração do Authelia):
 
 3. **Serviços não comunicando:**
-
+   * Teste conectividade entre containers:
    * Verifique rede Docker:
 ```bash
 docker network inspect app-network
