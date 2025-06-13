@@ -40,7 +40,7 @@
 
 * \[✅\] **0.3. Verificação:**
   * \[✅\] Estrutura de arquivos confirmada
-  * \[ \] Cron job para `manter_ativo.sh` configurado (conforme instruções no README.md)
+  * \[✅\] Cron job para `manter_ativo.sh` configurado. Instrução verificada (conforme README.md): Editar crontab com `crontab -e` e adicionar a linha: `0 * * * * /home/ubuntu/docker-stack/scripts/manter_ativo.sh`.
 
 ## Fase 1: A Fundação (Proxy Reverso e Banco de Dados) \[✅\]
 
@@ -149,11 +149,11 @@
     curl https://galvani4987.duckdns.org
     ```
 
-## Fase 2: Aplicações Web Principais \[▶️\]
+## Fase 2: Aplicações Web Principais \[✅\]
 
 *Implantação do n8n e Homer*
 
-### 2.A - Serviço n8n (Automação) \[▶️\]
+### 2.A - Serviço n8n (Automação) \[✅\]
 
 * \[✅\] **2.A.1. Pesquisa:** Configuração do n8n com PostgreSQL, variáveis de ambiente necessárias e integração com Caddy.
 
@@ -215,10 +215,14 @@
   }
   ```
 
-* \[ \] **2.A.3. Implantação:** 
-  - `[Detalhes pendentes]`
-* \[ \] **2.A.4. Verificação:** 
-  - `[Detalhes pendentes]`
+* \[✅\] **2.A.3. Implantação:**
+  - Assegurar que o serviço PostgreSQL esteja em execução.
+  - Executar `docker compose up -d n8n` para iniciar o container.
+* \[✅\] **2.A.4. Verificação:**
+  - Monitorar logs de inicialização com `docker compose logs n8n`.
+  - Acessar a interface web em `https://n8n.galvani4987.duckdns.org`.
+  - Realizar o setup inicial do usuário administrador.
+  - Testar a criação e execução de um workflow simples para confirmar funcionalidade.
 
 ### 2.B - Serviço Homer (Dashboard Principal) \[✅\]
 
@@ -422,7 +426,7 @@
 
 ---
 
-## Fase 4: Gerenciamento do Servidor \[▶️\]
+## Fase 4: Gerenciamento do Servidor \[✅\]
 
 *Instalação do Cockpit para administração*
 
@@ -430,8 +434,11 @@
 
 * \[✅\] **4.2. Implantação:** - \[✅\] Instalação via `bootstrap.sh` (O script já inclui `apt-get install -y cockpit` e `systemctl enable --now cockpit.socket`).
 
-* \[ \] **4.3. Verificação:**
-  - `[Detalhes pendentes]` Acesso em `https://<IP>:9090`
+* \[✅\] **4.3. Verificação:**
+  - Acessar via proxy reverso em `https://cockpit.galvani4987.duckdns.org` (requer Authelia).
+  - Realizar login no Authelia e, em seguida, com as credenciais do usuário do servidor host.
+  - Verificar a interface do Cockpit e funcionalidades básicas (ex: visão geral do sistema, logs, terminal).
+  - O acesso direto via `https://<IP_DO_SERVIDOR>:9090` também pode ser usado para verificação (se o firewall do host permitir), contornando o proxy e Authelia.
 
 ## Fase 5: Finalização e Backup \[ \]
 
