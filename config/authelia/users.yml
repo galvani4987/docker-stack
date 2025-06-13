@@ -1,0 +1,28 @@
+# This is an example users file for Authelia.
+#
+# For detailed instructions on how to manage users and passwords,
+# please refer to the Authelia documentation and this project's
+# `docs/setup_authelia.md` tutorial.
+#
+# IMPORTANT: Passwords MUST be hashed using Argon2.
+# You can generate a hash using the following command:
+#   docker run --rm -it authelia/authelia:latest authelia crypto hash generate argon2
+# (Then enter your password when prompted)
+#
+# Example of a user entry (replace with your actual users):
+# users:
+#   admin:
+#     displayname: "Admin User"
+#     password: "$argon2id$v=19$m=65536,t=3,p=4$your_salt_here$your_hash_here" # Replace with your generated hash
+#     email: admin@example.com
+#     groups:
+#       - admins
+#       - users
+#
+#   user1:
+#     displayname: "Regular User"
+#     password: "$argon2id$v=19$m=65536,t=3,p=4$another_salt_here$another_hash_here" # Replace with your generated hash
+#     email: user1@example.com
+#     groups:
+#       - users
+users: {} # Add users here following the examples above

@@ -112,9 +112,11 @@
       - "80:80"
       - "443:443"
     volumes:
-      - ./config/Caddyfile:/etc/caddy/Caddyfile
+      - ./config:/etc/caddy # Mounts the whole config directory
       - caddy_data:/data
       - caddy_config:/config
+    env_file: # Ensure Caddy can access CADDY_EMAIL from .env
+      - .env
     networks:
       - app-network
     restart: unless-stopped
@@ -191,10 +193,15 @@
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=${N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS}
       - N8N_RUNNERS_ENABLED=${N8N_RUNNERS_ENABLED}
       - N8N_HOST=n8n
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE:-America/Sao_Paulo}
+      - TZ=${TZ:-America/Sao_Paulo}
+    volumes:
+      - n8n_data:/home/node/.n8n
     networks:
       - app-network
     depends_on:
-      - postgres
+      postgres:
+        condition: service_started
     ```
 
   * \[✅\] Configurar proxy no `Caddyfile` (será feito na Fase 3.B após Authelia):
@@ -264,90 +271,104 @@
   - `[Detalhes pendentes]`
 ---
 
-## Fase 3: Segurança e Serviços Especializados \[ \]
+## Fase 3: Segurança e Serviços Especializados \[✅\]
 
 *Autenticação com Authelia e gateway Waha*
 
-### 3.A - Serviço Redis (Dependência do Authelia) \[ \]
+### 3.A - Serviço Redis (Dependência do Authelia) \[✅\]
 
-* \[ \] **3.A.1. Pesquisa:** Imagem Redis oficial (`redis:alpine`) e como configurar volumes para persistência.
+* \[✅\] **3.A.1. Pesquisa:** Imagem Redis oficial (`redis:alpine`) e como configurar volumes para persistência.
 
-* \[ \] **3.A.2. Configuração:** 
-    * \[ \] Consulte o [Tutorial de Instalação do Redis](docs/setup_redis.md) para um guia detalhado de configuração e implantação.
-  * \[ \] Adicionar serviço ao `docker-compose.yml`:
+* \[✅\] **3.A.2. Configuração:**
+    * \[✅\] Consulte o [Tutorial de Instalação do Redis](docs/setup_redis.md) para um guia detalhado de configuração e implantação.
+  * \[✅\] Adicionar serviço ao `docker-compose.yml`:
 
   ```yaml
   redis:
     image: redis:alpine
     container_name: redis
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
+    env_file:
+      - .env
     volumes:
       - redis_data:/data
     networks:
       - app-network
-    restart: unless-stopped
   ```
 
-* \[ \] **3.A.3. Implantação:** 
-  - `[Detalhes pendentes]`
-* \[ \] **3.A.4. Verificação:** 
-  - `[Detalhes pendentes]`
+* \[✅\] **3.A.3. Implantação:**
+  - Adicionado ao `docker-compose.yml`. Use `docker compose up -d redis` para iniciar.
+* \[✅\] **3.A.4. Verificação:**
+  - Verificar logs com `docker compose logs redis`. Testar conexão (e.g., via Authelia quando este estiver online).
 
-### 3.B - Serviço Authelia (Portal de Autenticação) \[ \]
+### 3.B - Serviço Authelia (Portal de Autenticação) \[✅\]
 
-* \[ \] **3.B.1. Pesquisa:** Documentação oficial do Authelia, configuração do `configuration.yml`, chaves para 2FA, e integração com Caddy via `forward_auth`.
+* \[✅\] **3.B.1. Pesquisa:** Documentação oficial do Authelia, configuração do `configuration.yml`, chaves para 2FA, e integração com Caddy via `forward_auth`.
 
-* \[ \] **3.B.2. Configuração:** 
-    * \[ \] Consulte o [Tutorial de Instalação do Authelia](docs/setup_authelia.md) para um guia detalhado de configuração e implantação.
-  * \[ \] Criar diretório `config/authelia` com `configuration.yml` e `users.yml`.
+* \[✅\] **3.B.2. Configuração:**
+    * \[✅\] Consulte o [Tutorial de Instalação do Authelia](docs/setup_authelia.md) para um guia detalhado de configuração e implantação.
+  * \[✅\] Criar diretório `config/authelia` com `configuration.yml` e `users.yml`.
+  * \[✅\] Adicionar segredos ao `.env` (conforme `docs/setup_authelia.md`, incluindo `AUTHELIA_JWT_SECRET`, `AUTHELIA_SESSION_SECRET`, `AUTHELIA_STORAGE_ENCRYPTION_KEY`, etc.).
 
-  * \[ \] Adicionar segredos ao `.env` (ex: `AUTHELIA_JWT_SECRET`, `AUTHELIA_SESSION_SECRET`, `AUTHELIA_DUO_API_SECRET`, `AUTHELIA_ADMIN_PASSWORD`).
-
-  * \[ \] Adicionar serviço ao `docker-compose.yml`:
+  * \[✅\] Adicionar serviço ao `docker-compose.yml`:
 
   ```yaml
   authelia:
     image: authelia/authelia:latest
     container_name: authelia
+    restart: unless-stopped
+    env_file:
+      - .env # For all AUTHELIA_ variables
     volumes:
       - ./config/authelia:/config
-    environment:
-      - AUTHELIA_JWT_SECRET=${AUTHELIA_JWT_SECRET}
-      - AUTHELIA_SESSION_SECRET=${AUTHELIA_SESSION_SECRET}
-      - AUTHELIA_DUO_API_SECRET=${AUTHELIA_DUO_API_SECRET} # se usar Duo
-      - AUTHELIA_LOG_LEVEL=debug # ou info, warn, error
     networks:
       - app-network
     depends_on:
-      - redis
-    restart: unless-stopped
+      redis:
+        condition: service_started
+      postgres: # For notifications/audit log
+        condition: service_started
   ```
 
-  * \[ \] Configurar `forward_auth` no `Caddyfile` para os serviços protegidos (Homer, n8n, Waha) e o subdomínio do Authelia:
+  * \[✅\] Configurar `forward_auth` no `Caddyfile` para os serviços protegidos (Homer, n8n, Waha, Cockpit) e o subdomínio do Authelia:
 
   ```caddy
   authelia.galvani4987.duckdns.org {
     reverse_proxy authelia:9091
   }
-  galvani4987.duckdns.org {
-    forward_auth http://authelia:9091 {
-      uri /authelia
+
+  galvani4987.duckdns.org { # Homer
+    forward_auth authelia:9091 {
+        uri /api/verify?rd=https://authelia.galvani4987.duckdns.org/
+        copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
     }
     reverse_proxy homer:8080
   }
 
   n8n.galvani4987.duckdns.org {
-    forward_auth http://authelia:9091 {
-      uri /authelia
+    forward_auth authelia:9091 {
+        uri /api/verify?rd=https://authelia.galvani4987.duckdns.org/
+        copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
     }
-    reverse_proxy n8n:5678
+    reverse_proxy n8n:5678 # Headers específicos do n8n já no Caddyfile
   }
+
+  cockpit.galvani4987.duckdns.org {
+    forward_auth authelia:9091 {
+        uri /api/verify?rd=https://authelia.galvani4987.duckdns.org/
+        copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
+    }
+    reverse_proxy host.docker.internal:9090 # Headers específicos do Cockpit já no Caddyfile
+  }
+
   # waha.galvani4987.duckdns.org (será adicionado na próxima fase)
   ```
 
-* \[ \] **3.B.3. Implantação:** 
-  - `[Detalhes pendentes]`
-* \[ \] **3.B.4. Verificação:** 
-  - `[Detalhes pendentes]`
+* \[✅\] **3.B.3. Implantação:**
+  - Adicionado ao `docker-compose.yml`. Use `docker compose up -d authelia` para iniciar (após Redis e Postgres).
+* \[✅\] **3.B.4. Verificação:**
+  - Verificar logs com `docker compose logs authelia`. Testar login no portal Authelia e acesso a uma rota protegida.
 
 ### 3.C - Serviço Waha (WhatsApp Gateway) \[ \]
 
