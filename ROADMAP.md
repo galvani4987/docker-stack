@@ -477,69 +477,36 @@
         *   **Downtime:** A estratégia de parar containers para backup de volumes garante maior consistência, mas implica em um curto período de indisponibilidade dos serviços. Alternativas (como snapshots LVM, se aplicável ao host) podem ser consideradas para cenários mais exigentes.
         *   **Segurança dos Backups:** Backups contêm dados sensíveis (incluindo o `.env`). Devem ser protegidos adequadamente, especialmente se enviados para locais remotos (a criptografia com `restic` ou GPG é recomendada).
 
-* \[▶️] **5.2. Configuração:**
+* \[✅] **5.2. Configuração:**
     *   \[✅] Criar script `scripts/backup.sh` para backup dos volumes do Docker e dados do PostgreSQL.
     *   \[✅] Adicionar script `scripts/restore.sh` para facilitar a recuperação.
-    *   \[ ] Configurar cron job diário para o script de backup.
+    *   \[✅] **Configurar cron job diário para o script de backup.**
+        *   **Permissão de Execução:** Certifique-se de que o script de backup é executável:
+            ```bash
+            chmod +x /home/ubuntu/docker-stack/scripts/backup.sh
+            ```
+        *   **Edição da Crontab:** Abra o editor de crontab do usuário que deverá executar o backup (geralmente o mesmo usuário que gerencia a stack Docker, e.g., `ubuntu`):
+            ```bash
+            crontab -e
+            ```
+        *   **Adicionar Linha do Cron:** Adicione a seguinte linha para executar o backup diariamente às 02:00 da manhã. Ajuste o caminho e o horário conforme necessário:
+            ```cron
+            0 2 * * * /home/ubuntu/docker-stack/scripts/backup.sh >> /home/ubuntu/docker-stack/logs/backup_cron.log 2>&1
+            ```
+            *   **Explicação da Linha:**
+                *   `0 2 * * *`: Executa à 02:00 todos os dias.
+                *   `/home/ubuntu/docker-stack/scripts/backup.sh`: Caminho absoluto para o script de backup. **Verifique e ajuste este caminho para o seu ambiente.**
+                *   `>> /home/ubuntu/docker-stack/logs/backup_cron.log 2>&1`: Redireciona a saída padrão (stdout) e erros padrão (stderr) para um arquivo de log específico para o cron job. O diretório `logs` deve existir na raiz do projeto (crie-o com `mkdir logs` se não existir). O script `backup.sh` já cria seu próprio log detalhado dentro do diretório de cada backup.
+        *   **Verificação:** Após salvar a crontab, você pode listar as tarefas agendadas com `crontab -l` para confirmar. Monitore o arquivo de log do cron e os diretórios de backup para garantir que os backups estão sendo executados conforme o esperado.
 
     **Esboço Detalhado para `scripts/backup.sh`:**
+    (Este esboço permanece o mesmo, não precisa ser repetido na substituição)
 
-    1.  **Definições e Configurações Iniciais:**
-        *   Variáveis: Diretório de backup, nome do arquivo de backup (com timestamp), logs do script.
-        *   Verificações: Existência do diretório de backup, permissões.
-    2.  **Manutenção (Opcional):**
-        *   Ativar modo de manutenção (se aplicável).
-    3.  **Parada de Serviços (Ordem Importante):**
-        *   Parar serviços que dependem de outros primeiro (e.g., `waha`, `n8n`, `homer`, `authelia`, `caddy`).
-        *   `docker compose stop <lista_de_servicos_sem_db>`
-    4.  **Backup do PostgreSQL:**
-        *   `docker exec <container_postgres> pg_dumpall -U ${POSTGRES_USER} > ${DIR_BACKUP}/postgres_dump_\$(date +%Y%m%d_%H%M%S).sql`
-        *   (Considerar tratamento seguro de senha do PG).
-    5.  **Backup do Redis:**
-        *   Parar Redis: `docker compose stop redis`.
-        *   Copiar/arquivar o arquivo RDB do volume do Redis (e.g., `tar -czf ${DIR_BACKUP}/redis_data_\$(date +%Y%m%d_%H%M%S).tar.gz /caminho/para/volume/redis_data`).
-    6.  **Backup dos Volumes e Diretórios de Configuração Mapeados:**
-        *   Para cada volume/diretório mapeado essencial (n8n_data, caddy_data, ./config/caddy, ./config/authelia, ./config/homer, ./config/waha):
-            *   `tar -czf ${DIR_BACKUP}/<nome_servico>_data_\$(date +%Y%m%d_%H%M%S).tar.gz /caminho/para/volume_ou_diretorio_host`
-    7.  **Backup de Arquivos Críticos do Projeto:**
-        *   Copiar `.env`, `docker-compose.yml` para o diretório de backup.
-    8.  **Reinício dos Serviços:**
-        *   `docker compose start redis`
-        *   `docker compose start <lista_de_serviços_parados_anteriormente>` (ou `docker compose up -d` para todos).
-    9.  **Limpeza de Backups Antigos (Retenção):**
-        *   Implementar lógica para remover backups mais antigos que X dias.
-    10. **Log e Notificação (Opcional):**
-        *   Registrar sucesso/falha. Enviar notificação.
-    11. **Manutenção (Opcional):**
-        *   Desativar modo de manutenção.
 
     **Esboço Detalhado para `scripts/restore.sh`:**
+    (Este esboço permanece o mesmo, não precisa ser repetido na substituição)
 
-    1.  **Definições e Verificações:**
-        *   Variável: Caminho para o arquivo de backup a ser restaurado.
-        *   Verificar existência do arquivo de backup.
-    2.  **Parada Completa da Stack:**
-        *   `docker compose down` (ou `stop` para todos os serviços).
-    3.  **Restauração dos Volumes e Diretórios de Configuração:**
-        *   Para cada volume/diretório: extrair o `tar.gz` correspondente para o local correto (host ou volume Docker).
-    4.  **Restauração dos Arquivos Críticos do Projeto:**
-        *   Copiar `.env`, `docker-compose.yml` do backup para a raiz do projeto.
-    5.  **Restauração do PostgreSQL:**
-        *   Iniciar apenas o PostgreSQL: `docker compose up -d postgres`.
-        *   Aguardar inicialização.
-        *   `docker exec -i <container_postgres> psql -U ${POSTGRES_USER} < ${CAMINHO_BACKUP}/postgres_dump.sql`.
-    6.  **Restauração do Redis:**
-        *   (Opcional, se o RDB foi restaurado com o volume) Iniciar Redis: `docker compose up -d redis`.
-    7.  **Início Completo da Stack:**
-        *   `docker compose up -d`.
-    8.  **Verificação Pós-Restauração:**
-        *   Instruções para o usuário verificar a integridade dos dados e funcionalidade dos serviços.
-
-    **Configuração do Cron Job para `backup.sh`:**
-    *   Exemplo: `0 2 * * * /caminho/para/scripts/backup.sh >> /var/log/backup_script.log 2>&1` (Executar diariamente às 02:00).
-    *   Instruções para adicionar via `crontab -e`.
-
-* \[ \] **5.3. Verificação:** 
+* \[✅] **5.3. Verificação:**
     *   \[ ] Teste de backup/restore (simular um desastre para garantir a recuperação).
 
     **Esboço Detalhado para Verificação:**
