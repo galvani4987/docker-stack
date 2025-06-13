@@ -440,23 +440,134 @@
   - Verificar a interface do Cockpit e funcionalidades básicas (ex: visão geral do sistema, logs, terminal).
   - O acesso direto via `https://<IP_DO_SERVIDOR>:9090` também pode ser usado para verificação (se o firewall do host permitir), contornando o proxy e Authelia.
 
-## Fase 5: Finalização e Backup \[ \]
+## Fase 5: Finalização e Backup \[▶️]
 
 *Implementação de estratégia de backup*
 
-* \[ \] **5.1. Pesquisa:** Estratégias de backup para Docker (volumes, bancos de dados), ferramentas (ex: `restic`, scripts tar/gzip) e opções de armazenamento remoto (ex: S3, rclone).
+* \[✅] **5.1. Pesquisa:** Estratégias de backup para Docker (volumes, bancos de dados), ferramentas (ex: `restic`, scripts tar/gzip) e opções de armazenamento remoto (ex: S3, rclone).
 
-* \[ \] **5.2. Configuração:** 
+    **Estratégia Proposta:**
 
-  * \[ \] Criar script `scripts/backup.sh` para backup dos volumes do Docker e dados do PostgreSQL.
+    A estratégia de backup para este projeto se concentrará em garantir a consistência dos dados para serviços stateful e a integridade dos arquivos de configuração críticos.
 
-  * \[ \] Adicionar script `scripts/restore.sh` para facilitar a recuperação.
+    1.  **Dados Stateful:**
+        *   **PostgreSQL (`postgres_data` volume):** Backup lógico utilizando `pg_dumpall` (ou `pg_dump` por banco) executado via `docker exec`. Isso garante um backup consistente do banco de dados. A restauração será feita via `psql`.
+        *   **Redis (`redis_data` volume):** Backup do arquivo RDB persistido pelo Redis. O Redis será configurado para salvar snapshots periodicamente. O volume contendo o arquivo RDB será arquivado.
+        *   **n8n (`n8n_data` volume):** Backup completo do volume, que contém o banco de dados SQLite (padrão), arquivos de configuração e workflows.
+        *   **Caddy (`caddy_data` e `caddy_config` volumes/mapeamentos):** Backup do volume `caddy_data` (contendo certificados ACME e outros dados operacionais) e do diretório de configuração `./config` (que inclui `Caddyfile` e é montado em `/etc/caddy`).
+        *   **Authelia (`./config/authelia` mapeamento):** Backup completo do diretório de configuração, que inclui `configuration.yml`, `users.yml`, e o banco de dados SQLite (se usado para auditoria/notificações, embora a configuração atual use Postgres para isso).
+        *   **Homer (`./config/homer` mapeamento):** Backup completo do diretório de configuração.
+        *   **Waha (`./config/waha/sessions` e `./config/waha/media` mapeamentos):** Backup completo dos diretórios de sessões e mídias.
 
-  * \[ \] Configurar cron job diário para o script de backup.
+    2.  **Arquivos de Configuração do Projeto:**
+        *   `.env`: Contém todos os segredos e é CRÍTICO para o backup.
+        *   `docker-compose.yml`: Define toda a stack de serviços.
+        *   Outros scripts ou arquivos de configuração relevantes no diretório do projeto.
+
+    3.  **Método de Backup Primário (Scripts Locais):**
+        *   Utilização de scripts shell (`backup.sh`, `restore.sh`) para orquestrar o processo.
+        *   Os scripts irão parar os containers relevantes (para garantir consistência dos dados onde necessário), executar os dumps de banco de dados, e arquivar os volumes/diretórios de configuração usando `tar` com compressão (gzip).
+        *   Os backups serão armazenados localmente em um diretório dedicado no host.
+
+    4.  **Ferramentas e Opções Avançadas (Considerações Futuras):**
+        *   **`restic`:** Recomendado como uma ferramenta robusta para backups futuros ou para usuários avançados. Oferece deduplicação, criptografia e integração com múltiplos backends de armazenamento (local, S3, B2, SFTP, etc.). Pode ser integrado aos scripts shell.
+        *   **`rclone`:** Para sincronização dos backups locais com serviços de armazenamento em nuvem.
+
+    5.  **Frequência e Retenção:**
+        *   **Frequência Sugerida:** Diária (automatizada via cron).
+        *   **Retenção Sugerida:** Manter os últimos 7-30 backups diários (configurável pelo usuário).
+
+    6.  **Considerações Importantes:**
+        *   **Downtime:** A estratégia de parar containers para backup de volumes garante maior consistência, mas implica em um curto período de indisponibilidade dos serviços. Alternativas (como snapshots LVM, se aplicável ao host) podem ser consideradas para cenários mais exigentes.
+        *   **Segurança dos Backups:** Backups contêm dados sensíveis (incluindo o `.env`). Devem ser protegidos adequadamente, especialmente se enviados para locais remotos (a criptografia com `restic` ou GPG é recomendada).
+
+* \[▶️] **5.2. Configuração:**
+    *   \[ ] Criar script `scripts/backup.sh` para backup dos volumes do Docker e dados do PostgreSQL.
+    *   \[ ] Adicionar script `scripts/restore.sh` para facilitar a recuperação.
+    *   \[ ] Configurar cron job diário para o script de backup.
+
+    **Esboço Detalhado para `scripts/backup.sh`:**
+
+    1.  **Definições e Configurações Iniciais:**
+        *   Variáveis: Diretório de backup, nome do arquivo de backup (com timestamp), logs do script.
+        *   Verificações: Existência do diretório de backup, permissões.
+    2.  **Manutenção (Opcional):**
+        *   Ativar modo de manutenção (se aplicável).
+    3.  **Parada de Serviços (Ordem Importante):**
+        *   Parar serviços que dependem de outros primeiro (e.g., `waha`, `n8n`, `homer`, `authelia`, `caddy`).
+        *   `docker compose stop <lista_de_servicos_sem_db>`
+    4.  **Backup do PostgreSQL:**
+        *   `docker exec <container_postgres> pg_dumpall -U ${POSTGRES_USER} > ${DIR_BACKUP}/postgres_dump_\$(date +%Y%m%d_%H%M%S).sql`
+        *   (Considerar tratamento seguro de senha do PG).
+    5.  **Backup do Redis:**
+        *   Parar Redis: `docker compose stop redis`.
+        *   Copiar/arquivar o arquivo RDB do volume do Redis (e.g., `tar -czf ${DIR_BACKUP}/redis_data_\$(date +%Y%m%d_%H%M%S).tar.gz /caminho/para/volume/redis_data`).
+    6.  **Backup dos Volumes e Diretórios de Configuração Mapeados:**
+        *   Para cada volume/diretório mapeado essencial (n8n_data, caddy_data, ./config/caddy, ./config/authelia, ./config/homer, ./config/waha):
+            *   `tar -czf ${DIR_BACKUP}/<nome_servico>_data_\$(date +%Y%m%d_%H%M%S).tar.gz /caminho/para/volume_ou_diretorio_host`
+    7.  **Backup de Arquivos Críticos do Projeto:**
+        *   Copiar `.env`, `docker-compose.yml` para o diretório de backup.
+    8.  **Reinício dos Serviços:**
+        *   `docker compose start redis`
+        *   `docker compose start <lista_de_serviços_parados_anteriormente>` (ou `docker compose up -d` para todos).
+    9.  **Limpeza de Backups Antigos (Retenção):**
+        *   Implementar lógica para remover backups mais antigos que X dias.
+    10. **Log e Notificação (Opcional):**
+        *   Registrar sucesso/falha. Enviar notificação.
+    11. **Manutenção (Opcional):**
+        *   Desativar modo de manutenção.
+
+    **Esboço Detalhado para `scripts/restore.sh`:**
+
+    1.  **Definições e Verificações:**
+        *   Variável: Caminho para o arquivo de backup a ser restaurado.
+        *   Verificar existência do arquivo de backup.
+    2.  **Parada Completa da Stack:**
+        *   `docker compose down` (ou `stop` para todos os serviços).
+    3.  **Restauração dos Volumes e Diretórios de Configuração:**
+        *   Para cada volume/diretório: extrair o `tar.gz` correspondente para o local correto (host ou volume Docker).
+    4.  **Restauração dos Arquivos Críticos do Projeto:**
+        *   Copiar `.env`, `docker-compose.yml` do backup para a raiz do projeto.
+    5.  **Restauração do PostgreSQL:**
+        *   Iniciar apenas o PostgreSQL: `docker compose up -d postgres`.
+        *   Aguardar inicialização.
+        *   `docker exec -i <container_postgres> psql -U ${POSTGRES_USER} < ${CAMINHO_BACKUP}/postgres_dump.sql`.
+    6.  **Restauração do Redis:**
+        *   (Opcional, se o RDB foi restaurado com o volume) Iniciar Redis: `docker compose up -d redis`.
+    7.  **Início Completo da Stack:**
+        *   `docker compose up -d`.
+    8.  **Verificação Pós-Restauração:**
+        *   Instruções para o usuário verificar a integridade dos dados e funcionalidade dos serviços.
+
+    **Configuração do Cron Job para `backup.sh`:**
+    *   Exemplo: `0 2 * * * /caminho/para/scripts/backup.sh >> /var/log/backup_script.log 2>&1` (Executar diariamente às 02:00).
+    *   Instruções para adicionar via `crontab -e`.
 
 * \[ \] **5.3. Verificação:** 
-  - `[Detalhes pendentes]`
-  * \[ \] Teste de backup/restore (simular um desastre para garantir a recuperação).
+    *   \[ ] Teste de backup/restore (simular um desastre para garantir a recuperação).
+
+    **Esboço Detalhado para Verificação:**
+
+    1.  **Executar Backup Completo:**
+        *   Rodar o script `scripts/backup.sh` para criar um backup completo em um ambiente de teste ou em um momento de baixa atividade.
+    2.  **Simular Cenário de Perda de Dados/Desastre:**
+        *   Parar todos os serviços (`docker compose down`).
+        *   Remover/renomear volumes Docker importantes (e.g., `postgres_data`, `n8n_data`).
+        *   Remover/renomear diretórios de configuração mapeados (e.g., `./config/authelia`, `.env`).
+    3.  **Executar Restauração Completa:**
+        *   Rodar o script `scripts/restore.sh`, apontando para o backup criado no passo 1.
+    4.  **Verificação Pós-Restauração:**
+        *   Confirmar que todos os serviços iniciam corretamente (`docker compose ps -a`).
+        *   Verificar logs dos serviços para erros de inicialização ou corrupção.
+        *   Acessar as UIs dos serviços (Homer, n8n, Authelia, Cockpit, Waha) e verificar se os dados e configurações foram restaurados:
+            *   **PostgreSQL:** Checar dados em tabelas específicas (e.g., usuários n8n, configurações Authelia se armazenadas em DB).
+            *   **n8n:** Verificar workflows, credenciais, execuções passadas.
+            *   **Authelia:** Verificar se usuários e regras de acesso funcionam.
+            *   **Caddy:** Verificar se os certificados SSL estão corretos e os sites carregam.
+            *   **Homer/Waha/Redis:** Verificar suas configurações e dados específicos.
+        *   Testar funcionalidades chave de cada serviço.
+    5.  **Documentar Resultados:**
+        *   Registrar o sucesso ou falhas do teste, tempo de restauração, e quaisquer problemas encontrados. Ajustar scripts/procedimentos conforme necessário.
 
 ## Progresso Atual
 
