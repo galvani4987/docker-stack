@@ -36,7 +36,7 @@ A pilha de serviços **inclui** os seguintes componentes:
 
 ## 🛠️ Scripts de Gerenciamento
 
-Dois scripts essenciais para gerenciamento do servidor:
+Scripts para gerenciamento do servidor:
 
 ### `bootstrap.sh`
 Prepara um novo servidor com todas as dependências necessárias:
@@ -55,6 +55,26 @@ Script para manter serviços ativos (executado via cron):
 ```bash
 0 * * * * /home/ubuntu/docker-stack/scripts/manter_ativo.sh
 ```
+
+### `backup.sh`
+Realiza o backup de dados críticos da aplicação e configurações:
+- Backups de bancos de dados PostgreSQL.
+- Backups de volumes Docker importantes (n8n, Caddy).
+- Backups de arquivos de configuração do projeto (`.env`, `docker-compose.yml`, diretório `config`).
+Os backups são armazenados localmente em `/opt/docker-stack-backups` (configurável no script) e logs detalhados são gerados.
+```bash
+sudo bash scripts/backup.sh
+```
+É recomendado configurar este script para ser executado via cron job para backups regulares. Consulte o `ROADMAP.md` (Fase 5) e o próprio script para detalhes de configuração do cron.
+
+### `restore.sh`
+Restaura os dados da aplicação a partir de um backup específico criado pelo `backup.sh`.
+Requer o caminho para o diretório de backup como argumento.
+**Atenção:** Este script para e remove os containers existentes antes de restaurar.
+```bash
+sudo bash scripts/restore.sh /opt/docker-stack-backups/<TIMESTAMP_DO_BACKUP>
+```
+Consulte o script para mais detalhes sobre o processo de restauração.
 
 ## ⚙️ Implantação em um Novo Servidor
 
