@@ -276,42 +276,15 @@
   - Acessar `https://galvani4987.duckdns.org` (ou seu domínio raiz). Verificar logs com `docker compose logs homer`.
 ---
 
-## Fase 3: Serviços Auxiliares \[✅\]
+## Fase 3: Gateway de WhatsApp (Waha) \[✅\]
 
-*Configuração do Redis e gateway Waha*
+*Configuração do gateway Waha*
 
-### 3.A - Serviço Redis \[✅\]
+### 3.A - Serviço Waha (WhatsApp Gateway) \[✅\]
 
-* \[✅\] **3.A.1. Pesquisa:** Imagem Redis oficial (`redis:alpine`) e como configurar volumes para persistência.
+* \[✅\] **3.A.1. Pesquisa:** Imagem oficial Waha (`devlikeapro/waha:latest`), variáveis de ambiente para configuração (ex: `WAHA_DEBUG`, `WAHA_WEBHOOK_URL`, `WHATSAPP_API_KEY`).
 
 * \[✅\] **3.A.2. Configuração:**
-    * \[✅\] Consulte o [Tutorial de Instalação do Redis](docs/setup_redis.md) para um guia detalhado de configuração e implantação.
-  * \[✅\] Adicionar serviço ao `docker-compose.yml`:
-
-  ```yaml
-  redis:
-    image: redis:alpine
-    container_name: redis
-    restart: unless-stopped
-    command: redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
-    env_file:
-      - .env
-    volumes:
-      - redis_data:/data
-    networks:
-      - app-network
-  ```
-
-* \[✅\] **3.A.3. Implantação:**
-  - Adicionado ao `docker-compose.yml`. Use `docker compose up -d redis` para iniciar.
-* \[✅\] **3.A.4. Verificação:**
-  - Verificar logs com `docker compose logs redis`. Testar conexão (e.g., usando `redis-cli PING` de outro container na mesma rede, ou por um serviço que o utilize).
-
-### 3.C - Serviço Waha (WhatsApp Gateway) \[✅\]
-
-* \[✅\] **3.C.1. Pesquisa:** Imagem oficial Waha (`devlikeapro/waha:latest`), variáveis de ambiente para configuração (ex: `WAHA_DEBUG`, `WAHA_WEBHOOK_URL`, `WHATSAPP_API_KEY`).
-
-* \[✅\] **3.C.2. Configuração:**
     * \[✅\] Consulte o [Tutorial de Instalação do WAHA](docs/setup_waha.md) para um guia detalhado de configuração e implantação.
   * \[✅\] Adicionar variáveis ao `.env` (ex: `WAHA_DEBUG=false`, `WHATSAPP_HOOK_URL`, `WHATSAPP_API_KEY`, etc., conforme `docs/setup_waha.md`).
 
@@ -346,9 +319,9 @@
   }
   ```
 
-* \[✅\] **3.C.3. Implantação:**
+* \[✅\] **3.A.3. Implantação:**
   - Adicionado ao `docker-compose.yml`. Use `docker compose up -d waha` para iniciar. Configuração inicial (QR code) pode exigir expor a porta temporariamente.
-* \[✅\] **3.C.4. Verificação:**
+* \[✅\] **3.A.4. Verificação:**
   - Verificar logs com `docker compose logs waha`. Testar endpoints da API após autenticação e configuração da sessão do WhatsApp.
 
 ---
@@ -379,7 +352,6 @@
 
     1.  **Dados Stateful:**
         *   **PostgreSQL (`postgres_data` volume):** Backup lógico utilizando `pg_dumpall` (ou `pg_dump` por banco) executado via `docker exec`. Isso garante um backup consistente do banco de dados. A restauração será feita via `psql`.
-        *   **Redis (`redis_data` volume):** Backup do arquivo RDB persistido pelo Redis. O Redis será configurado para salvar snapshots periodicamente. O volume contendo o arquivo RDB será arquivado.
         *   **n8n (`n8n_data` volume):** Backup completo do volume, que contém o banco de dados SQLite (padrão), arquivos de configuração e workflows.
         *   **Caddy (`caddy_data` e `caddy_config` volumes/mapeamentos):** Backup do volume `caddy_data` (contendo certificados ACME e outros dados operacionais) e do diretório de configuração `./config` (que inclui `Caddyfile` e é montado em `/etc/caddy`).
         *   **Homer (`./config/homer` mapeamento):** Backup completo do diretório de configuração.
@@ -452,7 +424,7 @@
             *   **PostgreSQL:** Checar dados em tabelas específicas (e.g., usuários n8n).
             *   **n8n:** Verificar workflows, credenciais, execuções passadas.
             *   **Caddy:** Verificar se os certificados SSL estão corretos e os sites carregam.
-            *   **Homer/Waha/Redis:** Verificar suas configurações e dados específicos.
+            *   **Homer/Waha:** Verificar suas configurações e dados específicos.
         *   Testar funcionalidades chave de cada serviço.
     5.  **Documentar Resultados:**
         *   Registrar o sucesso ou falhas do teste, tempo de restauração, e quaisquer problemas encontrados. Ajustar scripts/procedimentos conforme necessário.
@@ -472,8 +444,7 @@ gantt
     n8n                          :active,  des4, 2024-06-13, 3d
     Homer                        :         des5, after des4, 3d
     section Fase 3
-    Redis                        :         des6, after des5, 2d
-    Waha                         :         des8, after des6, 3d
+    Waha                         :         des8, after des5, 3d
     section Fase 4
     Cockpit                      :active,  des9, after des8, 2d
     section Fase 5

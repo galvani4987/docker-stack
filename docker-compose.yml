@@ -63,18 +63,6 @@ services:
       postgres:
         condition: service_started
 
-  redis:
-    image: redis:7.4.4-alpine
-    container_name: redis
-    restart: unless-stopped
-    command: redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
-    env_file:
-      - .env # To ensure REDIS_PASSWORD from .env is available
-    volumes:
-      - redis_data:/data
-    networks:
-      - app-network
-
   homer:
     image: b4bz/homer:latest
     container_name: homer
@@ -116,4 +104,3 @@ volumes:
   caddy_data:
   caddy_config:
   n8n_data:
-  redis_data:
