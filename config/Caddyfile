@@ -2,11 +2,6 @@
     email ${CADDY_EMAIL}
 }
 
-# --- Homer (Dashboard Principal) - Protegido pelo Authelia ---
-galvani4987.duckdns.org {
-    reverse_proxy homer:8080 # Assuming homer service on port 8080
-}
-
 # --- n8n - Protegido pelo Authelia ---
 n8n.galvani4987.duckdns.org {
     reverse_proxy n8n:5678 {

@@ -63,20 +63,6 @@ services:
       postgres:
         condition: service_started
 
-  homer:
-    image: b4bz/homer:latest
-    container_name: homer
-    user: "1000:1000" # Ensure this is appropriate for your host system's permissions for ./config/homer
-    volumes:
-      - ./config/homer:/www/assets
-    networks:
-      - app-network
-    restart: unless-stopped
-    environment:
-      - INIT_ASSETS=0 # Prevents re-initialization of assets on every start if config.yml is managed by user
-      # - UID=1000 # Not strictly needed if user: "1000:1000" is set and image supports it
-      # - GID=1000 # Not strictly needed
-
   waha:
     image: devlikeapro/waha:arm # Using the latest tag as per docs
     container_name: waha

@@ -149,9 +149,7 @@
     curl https://galvani4987.duckdns.org
     ```
 
-## Fase 2: Aplicações Web Principais \[✅\]
-
-*Implantação do n8n e Homer*
+## Fase 2: Automação (n8n) \[✅\]
 
 ### 2.A - Serviço n8n (Automação) \[✅\]
 
@@ -225,55 +223,6 @@
   - Realizar o setup inicial do usuário administrador.
   - Testar a criação e execução de um workflow simples para confirmar funcionalidade.
 
-### 2.B - Serviço Homer (Dashboard Principal) \[✅\]
-
-* \[✅\] **2.B.1. Pesquisa:** Imagem oficial Homer, estrutura de configuração e como servir arquivos estáticos via Caddy.
-
-* \[✅\] **2.B.2. Configuração:**
-    * \[✅\] Consulte o [Tutorial de Instalação do Homer](docs/setup_homer.md) para um guia detalhado de configuração e implantação.
-  * \[✅\] Criar diretório `config/homer` e adicionar o arquivo `config.yml` (exemplo básico):
-
-  ```yaml
-  # config.yml para Homer
-  title: "Dashboard do Servidor"
-  subtitle: "Acesso aos serviços self-hosted"
-  logo: "assets/logo.png" # Crie um logo ou use um placeholder
-
-  links:
-    - name: n8n
-      icon: "fas fa-robot"
-      url: https://n8n.galvani4987.duckdns.org
-    # Adicione mais links aqui
-  ```
-
-  * \[ \] Adicionar serviço ao `docker-compose.yml`:
-
-  ```yaml
-  homer:
-    image: b4bz/homer:latest
-    container_name: homer
-    user: "1000:1000" # UID:GID do host para permissões de ./config/homer
-    volumes:
-      - ./config/homer:/www/assets
-    networks:
-      - app-network
-    restart: unless-stopped
-    environment:
-      - INIT_ASSETS=0 # Não reinicializar assets, pois config.yml é gerenciado
-  ```
-
-  * \[✅\] Configurar proxy no `Caddyfile` para o domínio raiz:
-
-  ```caddy
-  galvani4987.duckdns.org {
-    reverse_proxy homer:8080
-  }
-  ```
-
-* \[✅\] **2.B.3. Implantação:**
-  - Adicionado ao `docker-compose.yml`. Use `docker compose up -d homer` para iniciar.
-* \[✅\] **2.B.4. Verificação:**
-  - Acessar `https://galvani4987.duckdns.org` (ou seu domínio raiz). Verificar logs com `docker compose logs homer`.
 ---
 
 ## Fase 3: Gateway de WhatsApp (Waha) \[✅\]
@@ -354,7 +303,6 @@
         *   **PostgreSQL (`postgres_data` volume):** Backup lógico utilizando `pg_dumpall` (ou `pg_dump` por banco) executado via `docker exec`. Isso garante um backup consistente do banco de dados. A restauração será feita via `psql`.
         *   **n8n (`n8n_data` volume):** Backup completo do volume, que contém o banco de dados SQLite (padrão), arquivos de configuração e workflows.
         *   **Caddy (`caddy_data` e `caddy_config` volumes/mapeamentos):** Backup do volume `caddy_data` (contendo certificados ACME e outros dados operacionais) e do diretório de configuração `./config` (que inclui `Caddyfile` e é montado em `/etc/caddy`).
-        *   **Homer (`./config/homer` mapeamento):** Backup completo do diretório de configuração.
         *   **Waha (`./config/waha/sessions` e `./config/waha/media` mapeamentos):** Backup completo dos diretórios de sessões e mídias.
 
     2.  **Arquivos de Configuração do Projeto:**
@@ -414,17 +362,17 @@
     2.  **Simular Cenário de Perda de Dados/Desastre:**
         *   Parar todos os serviços (`docker compose down`).
         *   Remover/renomear volumes Docker importantes (e.g., `postgres_data`, `n8n_data`).
-        *   Remover/renomear diretórios de configuração mapeados (e.g., `./config/homer`, `.env`).
+        *   Remover/renomear diretórios de configuração mapeados (e.g., `./config/caddy`, `.env`).
     3.  **Executar Restauração Completa:**
         *   Rodar o script `scripts/restore.sh`, apontando para o backup criado no passo 1.
     4.  **Verificação Pós-Restauração:**
         *   Confirmar que todos os serviços iniciam corretamente (`docker compose ps -a`).
         *   Verificar logs dos serviços para erros de inicialização ou corrupção.
-        *   Acessar as UIs dos serviços (Homer, n8n, Cockpit, Waha) e verificar se os dados e configurações foram restaurados:
+        *   Acessar as UIs dos serviços (n8n, Cockpit, Waha) e verificar se os dados e configurações foram restaurados:
             *   **PostgreSQL:** Checar dados em tabelas específicas (e.g., usuários n8n).
             *   **n8n:** Verificar workflows, credenciais, execuções passadas.
             *   **Caddy:** Verificar se os certificados SSL estão corretos e os sites carregam.
-            *   **Homer/Waha:** Verificar suas configurações e dados específicos.
+            *   **Waha:** Verificar suas configurações e dados específicos.
         *   Testar funcionalidades chave de cada serviço.
     5.  **Documentar Resultados:**
         *   Registrar o sucesso ou falhas do teste, tempo de restauração, e quaisquer problemas encontrados. Ajustar scripts/procedimentos conforme necessário.
@@ -442,9 +390,8 @@ gantt
     Caddy                        :done,    des3, 2024-06-12, 4d
     section Fase 2
     n8n                          :active,  des4, 2024-06-13, 3d
-    Homer                        :         des5, after des4, 3d
     section Fase 3
-    Waha                         :         des8, after des5, 3d
+    Waha                         :         des8, after des4, 3d
     section Fase 4
     Cockpit                      :active,  des9, after des8, 2d
     section Fase 5
