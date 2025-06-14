@@ -1,12 +1,11 @@
 # Tutorial: Configurando o WAHA (WhatsApp HTTP API)
 
-Este tutorial guia você pela configuração e implantação do WAHA (WhatsApp HTTP API), permitindo que você envie e receba mensagens do WhatsApp através de uma API REST. Neste projeto, WAHA será integrado com n8n e protegido pelo Authelia.
+Este tutorial guia você pela configuração e implantação do WAHA (WhatsApp HTTP API), permitindo que você envie e receba mensagens do WhatsApp através de uma API REST. Neste projeto, WAHA será integrado com n8n.
 
 ## Pré-requisitos
 
 1.  **Serviços Essenciais Rodando:**
     *   `caddy`: Configurado e rodando (Fase 1.B).
-    *   `authelia`: Configurado e rodando (Fase 3.B). WAHA será protegido pelo Authelia.
     *   (Opcional, mas recomendado) `n8n`: Configurado e rodando (Fase 2.A), se você planeja integrar webhooks do WAHA com n8n imediatamente.
 2.  **Diretório de Configuração:** Crie os diretórios no host para armazenar os dados persistentes do WAHA:
     ```bash
@@ -92,25 +91,20 @@ services:
 *   **`env_file: - .env`**: Garante que as variáveis definidas no seu arquivo `.env` sejam carregadas.
 *   **`logging:`**: Configuração padrão de logging do WAHA para Docker.
 
-## 3. Configuração do Caddy (Proxy Reverso com Authelia)
+## 3. Configuração do Caddy (Proxy Reverso)
 
-Adicione a seguinte configuração ao seu `config/Caddyfile` para expor o WAHA através do Caddy e protegê-lo com Authelia:
+Adicione a seguinte configuração ao seu `config/Caddyfile` para expor o WAHA através do Caddy:
 
 ```caddy
-# --- WAHA (WhatsApp HTTP API) - Protegido pelo Authelia ---
+# --- WAHA (WhatsApp HTTP API) ---
 waha.galvani4987.duckdns.org {
-    forward_auth authelia:9091 {
-        uri /api/authz/forward-auth
-        copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
-    }
     reverse_proxy waha:3000
 }
 ```
 
 **Explicação:**
-*   O tráfego para `waha.galvani4987.duckdns.org` será autenticado pelo Authelia.
-*   Após a autenticação bem-sucedida, as requisições são encaminhadas para o serviço `waha` na porta `3000`.
-*   **Importante - API Key:** Mesmo com Authelia, a API do WAHA em si deve ser protegida pela `WHATSAPP_API_KEY`. Authelia protege o *acesso ao endpoint*, mas a chave de API protege o *uso da API*.
+*   As requisições para `waha.galvani4987.duckdns.org` são encaminhadas para o serviço `waha` na porta `3000`.
+*   **Importante - API Key:** A API do WAHA deve ser protegida pela `WHATSAPP_API_KEY` definida nas variáveis de ambiente. Esta chave é necessária no header `X-Api-Key` de cada requisição à API do WAHA.
 
 ## 4. Implantação e Configuração Inicial
 
@@ -172,7 +166,7 @@ waha.galvani4987.duckdns.org {
 Com o WAHA implantado e verificado:
 *   Marque as etapas "3.C.1 Pesquisa", "3.C.2 Configuração", "3.C.3 Implantação" e "3.C.4 Verificação" como `[✅]` no `ROADMAP.md`.
 *   Agora você pode usar a API do WAHA para construir integrações ou conectar com ferramentas como o n8n.
-*   **Segurança Adicional (Opcional):** Considere remover ou comentar o mapeamento de porta `"127.0.0.1:3000:3000"` na seção `ports` do serviço `waha` no seu `docker-compose.yml` se o acesso direto à interface do WAHA (Swagger/Dashboard) não for mais necessário e toda a interação futura ocorrerá através da API (protegida pelo Caddy/Authelia) ou webhooks.
+    *   **Segurança Adicional (Opcional):** Considere remover ou comentar o mapeamento de porta `"127.0.0.1:3000:3000"` na seção `ports` do serviço `waha` no seu `docker-compose.yml` se o acesso direto à interface do WAHA (Swagger/Dashboard) não for mais necessário e toda a interação futura ocorrerá através da API (protegida pelo Caddy e pela chave de API) ou webhooks.
 
 Este tutorial cobriu a configuração essencial do WAHA. Explore a [documentação oficial do WAHA](https://waha.devlike.pro/docs/overview) para mais funcionalidades e configurações avançadas. Lembre-se da importância de usar o WhatsApp de forma responsável para evitar bloqueios.
 ```

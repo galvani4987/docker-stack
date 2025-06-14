@@ -2,7 +2,7 @@
     email ${CADDY_EMAIL}
 }
 
-# --- n8n - Protegido pelo Authelia ---
+# --- n8n ---
 n8n.galvani4987.duckdns.org {
     reverse_proxy n8n:5678 {
         header_up Host {host}
@@ -11,7 +11,7 @@ n8n.galvani4987.duckdns.org {
     }
 }
 
-# --- Cockpit - Protegido pelo Authelia ---
+# --- Cockpit ---
 cockpit.galvani4987.duckdns.org {
     reverse_proxy host.docker.internal:9090 {
         # Using {client_ip} which is Caddy's placeholder for the client's IP address
@@ -22,7 +22,7 @@ cockpit.galvani4987.duckdns.org {
     }
 }
 
-# --- WAHA (WhatsApp Gateway) - Protegido pelo Authelia ---
+# --- WAHA (WhatsApp Gateway) ---
 waha.galvani4987.duckdns.org {
    reverse_proxy waha:3000 # Assuming waha service on port 3000
 }

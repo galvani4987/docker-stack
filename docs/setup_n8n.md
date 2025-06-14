@@ -115,11 +115,6 @@ n8n.galvani4987.duckdns.org {
         header_up X-Real-IP {remote}
         header_up X-Forwarded-Proto {scheme}
     }
-    # A autenticação via Authelia será adicionada posteriormente (Fase 3.B)
-    # forward_auth http://authelia:9091 {
-    #   uri /authelia
-    #   copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
-    # }
 }
 ```
 Verifique se o seu `config/Caddyfile` contém esta entrada ou uma similar. O `email` para certificados SSL já deve estar configurado globalmente no seu Caddyfile.
@@ -156,8 +151,7 @@ Verifique se o seu `config/Caddyfile` contém esta entrada ou uma similar. O `em
 
 Com o n8n implantado e verificado:
 *   Marque as etapas "2.A.3. Implantação" e "2.A.4. Verificação" como `[✅]` no `ROADMAP.md`.
-*   Prossiga para a configuração do Homer (Fase 2.B) ou outros serviços conforme o roadmap.
-*   Lembre-se que a integração com Authelia para o n8n será feita na Fase 3.B.
+*   Prossiga para outros serviços conforme o roadmap.
 
 Este tutorial cobriu a configuração e implantação inicial do n8n. Consulte a [documentação oficial do n8n](https://docs.n8n.io/) para funcionalidades avançadas e troubleshooting.
 ```

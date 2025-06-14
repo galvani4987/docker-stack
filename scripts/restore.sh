@@ -170,7 +170,7 @@ fi
 log_message "INFO: Starting restoration of mapped configuration directories..."
 MAPPED_CONFIG_DIRS_PARENT="${PROJECT_ROOT_DIR}/config"
 # These are the names of the subdirectories within ./config that were backed up.
-MAPPED_CONFIG_SUBDIRS_TO_RESTORE="authelia caddy homer waha"
+MAPPED_CONFIG_SUBDIRS_TO_RESTORE="caddy waha"
 
 RESTORE_CONFIG_SUCCESSFUL_FLAG=true # Use a new flag for this specific section
 
@@ -221,7 +221,7 @@ fi
 log_message "INFO: Starting restoration of Docker named volumes..."
 # These are the suffixes for volumes like ${COMPOSE_PROJECT_NAME}_n8n_data, etc.
 # Assumes backup.sh created archives like 'volume_n8n_data.tar.gz' inside BACKUP_SOURCE_DIR.
-DOCKER_VOLUMES_TO_RESTORE="n8n_data caddy_data caddy_config redis_data postgres_data" # Added postgres_data
+DOCKER_VOLUMES_TO_RESTORE="n8n_data caddy_data caddy_config postgres_data" # Added postgres_data
 
 RESTORE_VOLUME_SUCCESSFUL_FLAG=true # Use a new flag for this specific section
 
