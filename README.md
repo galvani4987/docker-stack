@@ -131,6 +131,16 @@ Este repositório é projetado para uma implantação rápida e semi-automatizad
         # Adicione a linha:
         0 * * * * /home/ubuntu/docker-stack/scripts/manter_ativo.sh
         ```
+    * **Cron Job (Backup Automático):** Para garantir backups regulares dos seus dados, configure um cron job para o script `backup.sh`.
+        Edite a crontab do seu usuário (ex: `ubuntu`):
+        ```bash
+        crontab -e
+        ```
+        Adicione a seguinte linha, ajustando o caminho para o script se necessário. Este exemplo executa o backup diariamente às 02:00:
+        ```cron
+        0 2 * * * /home/ubuntu/docker-stack/scripts/backup.sh >> /home/ubuntu/docker-stack/logs/backup_cron.log 2>&1
+        ```
+        Certifique-se de que o diretório de logs (`/home/ubuntu/docker-stack/logs`) existe e que o caminho para o script `backup.sh` está correto.
     * **Firewall Oracle Cloud:** Libere as portas 80 e 443 no painel da Oracle Cloud (se aplicável).
 
 ## 🔄 Gerenciamento Diário
@@ -154,6 +164,7 @@ As seguintes variáveis devem ser configuradas no seu arquivo `.env`:
 
 -   `DOMAIN_NAME=your.domain.com`
 -   `CADDY_EMAIL=your_email@example.com`
+-   `TZ=America/Sao_Paulo # Ou o fuso horário desejado`
 
 -   `POSTGRES_DB=n8n`
 -   `POSTGRES_USER=n8n`
