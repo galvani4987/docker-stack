@@ -15,19 +15,17 @@ Estamos configurando um servidor VPS na Oracle Cloud para hospedar uma pilha de 
 **3. Arquitetura e Fluxo de Acesso:**
 Decidimos por um modelo de segurança centralizado:
 * O ponto de entrada principal é o domínio raiz: `https://galvani4987.duckdns.org`.
-* O acesso é protegido pelo **Authelia**, que exigirá login com usuário, senha e **Autenticação de Dois Fatores (2FA/TOTP)** via um aplicativo como o Google Authenticator.
-* Após a autenticação, o usuário é direcionado para o dashboard principal **Homer**.
-* Outros serviços em subdomínios (`n8n`, `waha`) também serão protegidos pela mesma sessão de login do Authelia (Single Sign-On).
-* O **Caddy** atuará como proxy reverso, gerenciando os certificados SSL (HTTPS) e a integração com o Authelia (`forward_auth`).
+* O acesso é protegido pelo **Authentik**, que exigirá login com usuário, senha e **Autenticação de Dois Fatores (2FA/TOTP)** via um aplicativo como o Google Authenticator.
+* Após a autenticação, o usuário é direcionado para a interface principal do **Authentik**, que servirá como landing page.
+* Outros serviços em subdomínios (`n8n`) também serão protegidos pela mesma sessão de login do Authentik (Single Sign-On).
+* O **Caddy** atuará como proxy reverso, gerenciando os certificados SSL (HTTPS) e a integração com o Authentik (`forward_auth`).
 
 **4. Pilha de Aplicações Planejada:**
 * **Caddy:** Proxy Reverso.
 * **PostgreSQL:** Banco de Dados.
-* **Redis:** Banco de dados de sessão para o Authelia.
-* **Authelia:** Portal de Autenticação (SSO/2FA).
+* **Redis:** Banco de dados de sessão para o Authentik.
+* **Authentik:** Portal de Autenticação (SSO/2FA) e landing page.
 * **n8n:** Automação de Workflows.
-* **Homer:** Dashboard Principal.
-* **Waha:** Gateway de WhatsApp.
 * **Cockpit:** Ferramenta de gerenciamento do servidor (instalada no host, não no Docker).
 
 **5. Plano de Ação e Estado Atual:**
@@ -42,4 +40,4 @@ Decidimos por um modelo de segurança centralizado:
 * Evite respostas longas com múltiplos blocos de comando. Prefira uma sequência de mensagens curtas e focadas.
 
 **7. Próxima Tarefa:**
-Sua primeira tarefa é me guiar na execução da **Fase 0** do roadmap: clonar o repositório no servidor VPS e criar a estrutura inicial de arquivos de configuração (`.env`, `docker-compose.yml`, etc.) dentro do diretório `/home/ubuntu/docker-stack`, um comando por vez.
+Sua primeira tarefa é revisar e corrigir as inconsistências encontradas nos arquivos de documentação (README, ROADMAP, SYSTEM_PROMPT), scripts e arquivos de configuração para garantir que todo o projeto esteja alinhado e coeso. Após a revisão, o foco será finalizar os testes de backup e restauração.

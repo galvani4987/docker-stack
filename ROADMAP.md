@@ -55,9 +55,9 @@
   * \[✅\] Variáveis adicionadas ao `.env`:
 
   ```env
-  POSTGRES_DB=main_db
-  POSTGRES_USER=admin
-  POSTGRES_PASSWORD=senha_segura_altere_esta
+  POSTGRES_DB=n8n
+  POSTGRES_USER=n8n
+  POSTGRES_PASSWORD=<CHANGE_THIS_TO_A_STRONG_PASSWORD>
   ```
 
   * \[✅\] Serviço adicionado ao `docker-compose.yml`:
@@ -166,9 +166,9 @@
   N8N_DB_POSTGRESDB_USER=${POSTGRES_USER}
   N8N_DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
   N8N_DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
-  N8N_WEBHOOK_URL=https://n8n.galvani4987.duckdns.org/
-  N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false
-  N8N_RUNNERS_ENABLED=true
+  N8N_WEBHOOK_URL=https://n8n.{$DOMAIN_NAME}/
+  N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+  N8N_RUNNERS_ENABLED=false
   ```
 
   * \[✅\] Adicionar serviço ao `docker-compose.yml`:
@@ -262,7 +262,7 @@
     *   \[✅] Redirecionamento para aplicações após login bem-sucedido.
     *   \[✅] Logs do Authentik server, worker, e outposts verificados.
 
-## Fase 5: Finalização e Backup \[▶️]
+## Fase 5: Finalização e Backup [✅]
 
 *Implementação de estratégia de backup*
 
@@ -299,6 +299,10 @@
     *   \[✅] Criar script `scripts/backup.sh` para backup dos volumes do Docker e dados do PostgreSQL.
     *   \[✅] Adicionar script `scripts/restore.sh` para facilitar a recuperação.
     *   \[✅] **Configurar cron job diário para o script de backup.**
+        Adicione a seguinte linha ao crontab do usuário `ubuntu` (ou o usuário que gerencia a stack):
+        ```cron
+        0 2 * * * /home/ubuntu/docker-stack/scripts/backup.sh >> /home/ubuntu/docker-stack/logs/backup_cron.log 2>&1
+        ```
         *   **Permissão de Execução:** Certifique-se de que o script de backup é executável:
             ```bash
             chmod +x /home/ubuntu/docker-stack/scripts/backup.sh

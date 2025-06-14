@@ -48,7 +48,12 @@ systemctl enable --now cockpit.socket
 
 # Criar estrutura de diretórios
 echo "> Criando estrutura de diretórios..."
-mkdir -p data # 'config' and 'scripts' are expected from the repository
+# Cria um diretório 'data' na raiz do projeto.
+# Este diretório pode ser usado para armazenar dados de usuário, backups locais,
+# ou arquivos de configuração/volume para serviços adicionados manualmente que não fazem parte do stack padrão.
+# Os serviços principais definidos em docker-compose.yml usam volumes nomeados pelo Docker.
+mkdir -p data
+# 'config' and 'scripts' are expected from the repository and are managed by git.
 
 # Configurar ambiente
 echo "> Configurando ambiente..."
