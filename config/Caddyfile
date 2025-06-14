@@ -2,27 +2,27 @@
     email ${CADDY_EMAIL}
 }
 
+# Main domain - Authentik as landing page
+{$DOMAIN_NAME} {
+    reverse_proxy authentik-server:9000
+}
+
+# Authentik - Identity Provider and SSO
+auth.{$DOMAIN_NAME} { # Ensure DOMAIN_NAME is defined in .env
+    reverse_proxy authentik-server:9000
+}
+
 # --- n8n ---
-n8n.galvani4987.duckdns.org {
-    reverse_proxy n8n:5678 {
-        header_up Host {host}
-        header_up X-Real-IP {remote} # {remote} is <ip>:<port>, {client_ip} is just <ip>
-        header_up X-Forwarded-Proto {scheme}
-    }
+n8n.{$DOMAIN_NAME} {
+    reverse_proxy authentik_proxy_n8n:9000
 }
 
 # --- Cockpit ---
-cockpit.galvani4987.duckdns.org {
-    reverse_proxy host.docker.internal:9090 {
-        # Using {client_ip} which is Caddy's placeholder for the client's IP address
-        header_up Host {host} # Preserve original host header
-        header_up X-Real-IP {client_ip}
-        header_up X-Forwarded-For {client_ip}
-        header_up X-Forwarded-Proto {scheme}
-    }
+cockpit.{$DOMAIN_NAME} {
+    reverse_proxy authentik_proxy_cockpit:9000
 }
 
 # --- WAHA (WhatsApp Gateway) ---
-waha.galvani4987.duckdns.org {
-   reverse_proxy waha:3000 # Assuming waha service on port 3000
+waha.{$DOMAIN_NAME} {
+   reverse_proxy authentik_proxy_waha:9000
 }

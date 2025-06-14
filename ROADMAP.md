@@ -289,6 +289,29 @@
   - Verificar a interface do Cockpit e funcionalidades básicas (ex: visão geral do sistema, logs, terminal).
   - O acesso direto via `https://<IP_DO_SERVIDOR>:9090` também pode ser usado para verificação (se o firewall do host permitir), contornando o proxy.
 
+## Fase X: Identity Management & SSO (Authentik) [✅]
+
+*Implementação do Authentik como provedor de identidade central e SSO.*
+
+*   \[✅] **X.1. Pesquisa:** Imagens Docker do Authentik (`ghcr.io/goauthentik/server`, `ghcr.io/goauthentik/proxy`), PostgreSQL e Redis como dependências, configuração de Caddy para Authentik e outposts.
+*   \[✅] **X.2. Configuração:**
+    *   \[✅] Adicionados serviços `authentik-postgres`, `authentik-redis`, `authentik-server`, `authentik-worker` ao `docker-compose.yml`.
+    *   \[✅] Adicionados serviços de outpost `authentik_proxy_n8n`, `authentik_proxy_cockpit`, `authentik_proxy_waha` ao `docker-compose.yml`.
+    *   \[✅] Adicionadas todas as variáveis `AUTHENTIK_*` (core e outpost tokens) ao `.env.example` e ao `.env`.
+    *   \[✅] Configurado Caddyfile para rotear `{$DOMAIN_NAME}` e `auth.{$DOMAIN_NAME}` para `authentik-server:9000`.
+    *   \[✅] Configurado Caddyfile para rotear subdomínios de aplicações (n8n, cockpit, waha) para seus respectivos outposts Authentik (ex: `authentik_proxy_n8n:9000`).
+    *   \[✅] Criado `docs/setup_authentik.md` com guia detalhado de instalação, configuração do Google OAuth, e proteção de aplicações.
+*   \[✅] **X.3. Implantação:**
+    *   \[✅] Serviços Authentik e outposts iniciados via `docker compose up -d`.
+    *   \[✅] Configuração inicial do Authentik UI realizada (admin user, Google OAuth provider, Applications, Providers, Outposts para n8n, Cockpit, Waha).
+    *   \[✅] Tokens de outpost preenchidos no `.env` e outposts reiniciados.
+*   \[✅] **X.4. Verificação:**
+    *   \[✅] Acesso a `https://{$DOMAIN_NAME}` redireciona para o login do Authentik.
+    *   \[✅] Login com `akadmin` e Google OAuth funcionais.
+    *   \[✅] Acesso a `https://n8n.{$DOMAIN_NAME}`, `https://cockpit.{$DOMAIN_NAME}`, `https://waha.{$DOMAIN_NAME}` são protegidos pelo Authentik.
+    *   \[✅] Redirecionamento para aplicações após login bem-sucedido.
+    *   \[✅] Logs do Authentik server, worker, e outposts verificados.
+
 ## Fase 5: Finalização e Backup \[▶️]
 
 *Implementação de estratégia de backup*
@@ -389,11 +412,13 @@ gantt
     PostgreSQL                   :done,    des2, 2024-06-11, 3d
     Caddy                        :done,    des3, 2024-06-12, 4d
     section Fase 2
-    n8n                          :active,  des4, 2024-06-13, 3d
+    n8n                          :done,  des4, 2024-06-13, 3d
     section Fase 3
-    Waha                         :         des8, after des4, 3d
+    Waha                         :done,         des8, after des4, 3d
     section Fase 4
-    Cockpit                      :active,  des9, after des8, 2d
+    Cockpit                      :done,  des9, after des8, 2d
+    section Fase X
+    Authentik SSO                :done,    desX, after des9, 5d # Assuming it took 5 days
     section Fase 5
-    Backup                       :         des10, after des9, 3d
+    Backup                       :      des10, after desX, 3d
 

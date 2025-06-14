@@ -1,8 +1,8 @@
 # Docker Stack - Servidor VPS
 
-Este repositório contém a configuração completa para implantar uma pilha de serviços de auto-hospedagem (self-hosted) em um servidor VPS (Ubuntu 24.04), utilizando Docker e Docker Compose.
+Este repositório contém a configuração completa para implantar uma pilha de serviços de auto-hospedagem (self-hosted) em um servidor VPS (Ubuntu 24.04), utilizando Docker, Docker Compose, e **Authentik para Single Sign-On (SSO) e gerenciamento de identidade.**
 
-O objetivo é criar uma configuração padronizada, segura, versionada e facilmente replicável.
+O objetivo é criar uma configuração padronizada, segura, versionada e facilmente replicável, onde **Authentik atua como o portal de entrada principal e o provedor de identidade para os demais serviços.**
 
 ## 🎯 Status Atual do Projeto
 
@@ -12,19 +12,29 @@ O serviço Waha está em fase de planejamento e implementação. Outros serviço
 
 ## 🔐 Fluxo de Acesso e Segurança
 
-Este ambiente opera com Caddy como o ponto de entrada principal, fornecendo HTTPS automático para todos os serviços.
-1. O acesso aos serviços é feito diretamente através de seus respectivos subdomínios, por exemplo, `https://n8n.galvani4987.duckdns.org`.
-2. A segurança de cada serviço individual (login, etc.) é gerenciada pelo próprio serviço.
+Este ambiente opera com **Authentik como o provedor de identidade central e Caddy como o reverse proxy principal**, fornecendo HTTPS automático para todos os serviços.
+1. O acesso ao domínio principal (`https://{$DOMAIN_NAME}`) e a todos os serviços protegidos (n8n, Cockpit, Waha, etc.) é gerenciado pelo Authentik.
+2. Ao tentar acessar um serviço, o usuário é redirecionado para o Authentik para login (se ainda não estiver logado).
+3. Após a autenticação bem-sucedida (que pode incluir Google OAuth), o usuário é redirecionado de volta ao serviço solicitado.
+4. O Authentik também serve como a página de destino principal do stack em `https://{$DOMAIN_NAME}`.
 
-## 🚀 Serviços Planejados (Stack Final)
+## 🚀 Serviços da Stack
 
-A pilha de serviços **inclui** os seguintes componentes, acessados através do Caddy:
+A pilha de serviços **inclui** os seguintes componentes:
 
-* **Caddy:** Proxy reverso moderno e automático com HTTPS. É o portão de entrada para todos os serviços. (Já operacional)
-* **PostgreSQL:** Banco de dados relacional robusto para aplicações. (Já operacional)
-* **n8n:** Plataforma de automação de fluxos de trabalho. (Ex: [https://n8n.galvani4987.duckdns.org](https://n8n.galvani4987.duckdns.org)).
-* **Waha:** API HTTP para integração com o WhatsApp **(a ser implementado)** (Ex: [https://waha.galvani4987.duckdns.org](https://waha.galvani4987.duckdns.org)).
-* **Cockpit:** Interface para gerenciamento do servidor host (Instalado pelo bootstrap.sh; acesso direto via https://IP_DO_SERVIDOR:9090)
+*   **Authentik:** Provedor de Identidade e SSO. Gerencia o acesso a todos os outros aplicativos.
+    *   `authentik-server`: O serviço principal do Authentik.
+    *   `authentik-worker`: Processos em segundo plano para o Authentik.
+    *   `authentik-postgres`: Banco de dados dedicado para o Authentik.
+    *   `authentik-redis`: Cache dedicado para o Authentik.
+    *   `authentik_proxy_n8n`: Outpost do Authentik para proteger o n8n.
+    *   `authentik_proxy_cockpit`: Outpost do Authentik para proteger o Cockpit.
+    *   `authentik_proxy_waha`: Outpost do Authentik para proteger o Waha.
+*   **Caddy:** Proxy reverso moderno e automático com HTTPS. Roteia o tráfego para o Authentik e seus outposts.
+*   **PostgreSQL (Principal):** Banco de dados relacional robusto para aplicações como n8n.
+*   **n8n:** Plataforma de automação de fluxos de trabalho. Acesso via `https://n8n.{$DOMAIN_NAME}` (protegido pelo Authentik).
+*   **Waha:** API HTTP para integração com o WhatsApp. Acesso via `https://waha.{$DOMAIN_NAME}` (protegido pelo Authentik).
+*   **Cockpit:** Interface para gerenciamento do servidor host. Acesso via `https://cockpit.{$DOMAIN_NAME}` (protegido pelo Authentik).
 
 *Nota: Consulte o [ROADMAP.md](ROADMAP.md) para o status atual de implementação de cada serviço.*
 
@@ -80,6 +90,7 @@ Este repositório é projetado para uma implantação rápida e semi-automatizad
     ```bash
     nano .env
     ```
+    **Importante:** Certifique-se de definir todas as variáveis `POSTGRES_*` para o banco de dados principal do n8n, e todas as novas variáveis `AUTHENTIK_*` (senhas, chaves secretas, tokens de outpost, configurações de email) conforme detalhado no `.env.example` e na documentação do Authentik.
 
 4.  **Inicie a Pilha Docker:**
     Com tudo configurado, inicie todos os serviços:
@@ -87,14 +98,24 @@ Este repositório é projetado para uma implantação rápida e semi-automatizad
     docker compose up -d
     ```
 
-5.  **Configurações Manuais Pós-Instalação:**
+5.  **Configuração Inicial do Authentik (Manual - UI):**
+    Após iniciar os serviços, você precisará realizar a configuração inicial do Authentik através da interface web.
+    *   **Acesse `https://{$DOMAIN_NAME}/if/flow/initial-setup/`** (substitua `{$DOMAIN_NAME}` pelo seu domínio real).
+    *   Siga as instruções para criar o usuário administrador `akadmin`.
+    *   **Consulte o guia detalhado `docs/setup_authentik.md`** para configurar o Google OAuth, proteger as aplicações (n8n, Cockpit, Waha) criando Providers e Outposts, e obter os `AUTHENTIK_TOKEN_*` para adicionar ao seu arquivo `.env`.
+    *   **Após obter e configurar os `AUTHENTIK_TOKEN_*` no `.env`, reinicie os serviços de proxy do Authentik:**
+        ```bash
+        docker compose restart authentik_proxy_n8n authentik_proxy_cockpit authentik_proxy_waha
+        ```
+
+6.  **Configurações Manuais Pós-Instalação (Outras):**
     * **Cron Job (Keep-Alive):** Configure o cron job para o script de atividade:
         ```bash
         crontab -e
         # Adicione a linha:
         0 * * * * /home/ubuntu/docker-stack/scripts/manter_ativo.sh
         ```
-    * **Firewall Oracle Cloud:** Libere as portas 80 e 443 no painel da Oracle Cloud
+    * **Firewall Oracle Cloud:** Libere as portas 80 e 443 no painel da Oracle Cloud (se aplicável).
 
 ## 🔄 Gerenciamento Diário
 
@@ -108,6 +129,53 @@ Comandos úteis para operação do sistema:
 | `docker compose pull` | Atualizar imagens dos serviços |
 | `sudo bash clean-server.sh` | Reset completo do servidor |
 | `sudo ufw status` | Verificar status do firewall |
+| `docker compose logs authentik-server authentik-worker` | Ver logs do Authentik |
+| `docker compose logs authentik_proxy_n8n` | Ver logs de um outpost específico |
+
+## Variáveis de Ambiente Essenciais (.env)
+
+As seguintes variáveis devem ser configuradas no seu arquivo `.env`:
+
+-   `DOMAIN_NAME=your.domain.com`
+-   `CADDY_EMAIL=your_email@example.com`
+
+-   `POSTGRES_DB=n8n`
+-   `POSTGRES_USER=n8n`
+-   `POSTGRES_PASSWORD=<STRONG_PASSWORD_FOR_N8N_DB>`
+
+-   `N8N_DB_TYPE=postgres`
+-   `N8N_DB_POSTGRESDB_HOST=postgres`
+-   `N8N_DB_POSTGRESDB_PORT=5432`
+-   `N8N_DB_POSTGRESDB_USER=${POSTGRES_USER}`
+-   `N8N_DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}`
+-   `N8N_DB_POSTGRESDB_DATABASE=${POSTGRES_DB}`
+-   `N8N_WEBHOOK_URL=https://n8n.{$DOMAIN_NAME}`
+-   `N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true`
+-   `N8N_RUNNERS_ENABLED=false`
+
+-   `WHATSAPP_API_KEY=<YOUR_WAHA_API_KEY>`
+-   `WAHA_BASE_URL=https://waha.{$DOMAIN_NAME}`
+-   `WHATSAPP_HOOK_URL=https://n8n.{$DOMAIN_NAME}/webhook/whatsapp`
+-   `WHATSAPP_HOOK_EVENTS=message,ack`
+-   `WAHA_DEBUG_MODE=false`
+-   `WAHA_LOG_LEVEL=info`
+
+-   `AUTHENTIK_POSTGRES_DB=authentik`
+-   `AUTHENTIK_POSTGRES_USER=authentik`
+-   `AUTHENTIK_POSTGRES_PASSWORD=<STRONG_PASSWORD_FOR_AUTHENTIK_DB>`
+-   `AUTHENTIK_SECRET_KEY=<STRONG_SECRET_KEY_FOR_AUTHENTIK_APP>`
+
+-   `AUTHENTIK_EMAIL_HOST=smtp.example.com`
+-   `AUTHENTIK_EMAIL_PORT=587`
+-   `AUTHENTIK_EMAIL_USERNAME=user@example.com`
+-   `AUTHENTIK_EMAIL_PASSWORD=<YOUR_SMTP_PASSWORD>`
+-   `AUTHENTIK_EMAIL_USE_TLS=true`
+-   `AUTHENTIK_EMAIL_USE_SSL=false`
+-   `AUTHENTIK_EMAIL_FROM=authentik@{$DOMAIN_NAME}`
+
+-   `AUTHENTIK_TOKEN_N8N=<AUTHENTIK_OUTPOST_TOKEN_FOR_N8N>`
+-   `AUTHENTIK_TOKEN_COCKPIT=<AUTHENTIK_OUTPOST_TOKEN_FOR_COCKPIT>`
+-   `AUTHENTIK_TOKEN_WAHA=<AUTHENTIK_OUTPOST_TOKEN_FOR_WAHA>`
 
 ## 🚨 Troubleshooting
 
@@ -138,39 +206,41 @@ Se você estiver enfrentando problemas com a emissão de certificados SSL (HTTPS
     sudo ufw status
     ```
 
-### Problema: Serviços não se comunicam entre si ou com o exterior
+### Problema: Serviços não se comunicam entre si ou com o exterior (Pós-Authentik)
 
-Se os containers Docker não conseguem se comunicar entre si ou com a internet:
+Com a introdução do Authentik, a comunicação passa pelos outposts.
+
+*   **Verifique os logs do Outpost:** Se um aplicativo não estiver acessível, o primeiro lugar para verificar é o log do outpost correspondente (ex: `docker compose logs authentik_proxy_n8n`).
+    *   Procure por erros de token, problemas de conexão com o `AUTHENTIK_HOST` ou com o serviço interno.
+*   **Verifique os logs do Authentik Server/Worker:** `docker compose logs authentik-server authentik-worker`.
+*   **Configuração do Provider no Authentik UI:**
+    *   **External Host:** Deve corresponder exatamente ao URL que o usuário acessa (ex: `https://n8n.{$DOMAIN_NAME}`).
+    *   **Internal Host:** Deve ser o nome do serviço Docker e a porta correta (ex: `http://n8n:5678`). O outpost precisa conseguir resolver e alcançar este host.
+*   **Token do Outpost:** Certifique-se de que o token no arquivo `.env` (`AUTHENTIK_TOKEN_N8N`, etc.) é exatamente o mesmo fornecido pelo Authentik UI ao criar/editar o outpost. Reinicie o outpost após qualquer alteração no token.
+*   **`AUTHENTIK_HOST` nos Outposts:** Verifique se a variável `AUTHENTIK_HOST` (ex: `https://auth.{$DOMAIN_NAME}`) nos serviços de outpost no `docker-compose.yml` está correta e acessível de dentro da rede Docker.
 
 *   **Inspecione a Rede Docker:**
-    *   Verifique se todos os serviços relevantes estão conectados à mesma rede Docker (`app-network` neste projeto).
+    *   Verifique se todos os serviços (Authentik server/worker, outposts, aplicações) estão conectados à mesma rede Docker (`app-network` neste projeto).
     ```bash
     docker network inspect app-network
     ```
-    *   Confirme se os containers aparecem listados na seção "Containers" da saída do comando.
-
-*   **Teste a conectividade interna:**
-    *   Você pode testar a resolução de nome e a conectividade entre containers usando `ping` ou `curl` de dentro de um container.
-    *   Primeiro, acesse o shell de um container (ex: o container do Caddy):
+*   **Teste a conectividade interna (do outpost para a aplicação):**
+    *   Acesse o shell de um container de outpost (ex: `authentik_proxy_n8n`):
         ```bash
-        docker compose exec caddy sh
+        docker compose exec authentik_proxy_n8n sh
         ```
-    *   Dentro do container, tente pingar outro serviço pelo nome definido no `docker-compose.yml` (ex: `ping postgres` ou `ping n8n`).
+    *   Dentro do container, tente usar `curl` para acessar o serviço interno que ele deveria proteger (ex: `curl http://n8n:5678`).
         ```sh
-        # Dentro do container do Caddy
-        ping postgres
-        ping n8n
+        # Dentro do container authentik_proxy_n8n
+        curl http://n8n:5678
         ```
-    *   *Nota: Algumas imagens minimalistas podem não incluir `ping` ou `curl`. Use um container que possua essas ferramentas ou instale-as temporariamente se necessário e possível.*
+    *   Se isso falhar, há um problema de rede entre o outpost e o serviço de destino, ou o serviço de destino não está funcionando.
 
 *   **Verifique as regras de firewall do host:**
-    *   Embora o Docker gerencie suas próprias regras de iptables, configurações restritivas de UFW ou firewalls externos podem interferir. Assegure-se de que as políticas `FORWARD` não estejam bloqueando o tráfego entre redes Docker ou para o exterior.
+    *   Normalmente não é um problema para comunicação interna do Docker, mas configurações muito restritivas podem interferir.
 
 *   **Consulte os logs dos serviços envolvidos:**
-    *   Logs específicos dos containers podem indicar problemas de configuração de rede, erros de resolução de nome, ou falhas ao tentar estabelecer conexões.
-    ```bash
-    docker compose logs nome_do_servico_1 nome_do_servico_2
-    ```
+    *   Logs específicos dos containers (aplicação, outpost, authentik-server) são cruciais.
 
 ## 🤝 Contribuição
 Contribuições são bem-vindas! Siga o fluxo:

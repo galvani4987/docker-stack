@@ -85,8 +85,152 @@ services:
         max-size: "10m"
         max-file: "5"
 
+  authentik-postgres:
+    image: docker.io/library/postgres:15-alpine
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${AUTHENTIK_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${AUTHENTIK_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${AUTHENTIK_POSTGRES_DB}
+    volumes:
+      - authentik_db:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${AUTHENTIK_POSTGRES_USER} -d ${AUTHENTIK_POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  authentik-redis:
+    image: docker.io/library/redis:alpine
+    restart: unless-stopped
+    volumes:
+      - authentik_redis:/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  authentik-server:
+    image: ghcr.io/goauthentik/server:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      AUTHENTIK_POSTGRESQL__HOST: authentik-postgres
+      AUTHENTIK_POSTGRESQL__USER: ${AUTHENTIK_POSTGRES_USER}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_POSTGRES_PASSWORD}
+      AUTHENTIK_POSTGRESQL__NAME: ${AUTHENTIK_POSTGRES_DB}
+      AUTHENTIK_REDIS__HOST: authentik-redis
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+      AUTHENTIK_ERROR_REPORTING__ENABLED: "true"
+      AUTHENTIK_EMAIL__HOST: ${AUTHENTIK_EMAIL_HOST}
+      AUTHENTIK_EMAIL__PORT: ${AUTHENTIK_EMAIL_PORT}
+      AUTHENTIK_EMAIL__USERNAME: ${AUTHENTIK_EMAIL_USERNAME}
+      AUTHENTIK_EMAIL__PASSWORD: ${AUTHENTIK_EMAIL_PASSWORD}
+      AUTHENTIK_EMAIL__USE_TLS: ${AUTHENTIK_EMAIL_USE_TLS}
+      AUTHENTIK_EMAIL__USE_SSL: ${AUTHENTIK_EMAIL_USE_SSL}
+      AUTHENTIK_EMAIL__FROM: ${AUTHENTIK_EMAIL_FROM}
+      AUTHENTIK_LISTEN__HTTP: 0.0.0.0:9000
+      AUTHENTIK_LISTEN__HTTPS: 0.0.0.0:9443
+      AUTHENTIK_LISTEN__METRICS: 0.0.0.0:9300
+      AUTHENTIK_LISTEN__DEBUG: 0.0.0.0:9900
+    volumes:
+      - ./media:/media
+      - ./custom-templates:/templates
+      - authentik_certs:/certs
+    networks:
+      - app-network
+    depends_on:
+      authentik-postgres:
+        condition: service_healthy
+      authentik-redis:
+        condition: service_healthy
+
+  authentik-worker:
+    image: ghcr.io/goauthentik/server:latest
+    restart: unless-stopped
+    command: worker
+    env_file: .env
+    environment:
+      AUTHENTIK_POSTGRESQL__HOST: authentik-postgres
+      AUTHENTIK_POSTGRESQL__USER: ${AUTHENTIK_POSTGRES_USER}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_POSTGRES_PASSWORD}
+      AUTHENTIK_POSTGRESQL__NAME: ${AUTHENTIK_POSTGRES_DB}
+      AUTHENTIK_REDIS__HOST: authentik-redis
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+      AUTHENTIK_ERROR_REPORTING__ENABLED: "true"
+      AUTHENTIK_EMAIL__HOST: ${AUTHENTIK_EMAIL_HOST}
+      AUTHENTIK_EMAIL__PORT: ${AUTHENTIK_EMAIL_PORT}
+      AUTHENTIK_EMAIL__USERNAME: ${AUTHENTIK_EMAIL_USERNAME}
+      AUTHENTIK_EMAIL__PASSWORD: ${AUTHENTIK_EMAIL_PASSWORD}
+      AUTHENTIK_EMAIL__USE_TLS: ${AUTHENTIK_EMAIL_USE_TLS}
+      AUTHENTIK_EMAIL__USE_SSL: ${AUTHENTIK_EMAIL_USE_SSL}
+      AUTHENTIK_EMAIL__FROM: ${AUTHENTIK_EMAIL_FROM}
+      # Worker does not need listen ports
+    volumes:
+      - ./media:/media
+      - ./custom-templates:/templates
+      - authentik_certs:/certs
+    networks:
+      - app-network
+    depends_on:
+      authentik-postgres:
+        condition: service_healthy
+      authentik-redis:
+        condition: service_healthy
+
+  authentik_proxy_n8n:
+    image: ghcr.io/goauthentik/proxy:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      AUTHENTIK_HOST: https://auth.{$DOMAIN_NAME}
+      AUTHENTIK_TOKEN: ${AUTHENTIK_TOKEN_N8N}
+      AUTHENTIK_INSECURE: "false"
+      AUTHENTIK_LOG_LEVEL: info
+    networks:
+      - app-network
+    depends_on:
+      - authentik-server
+
+  authentik_proxy_cockpit:
+    image: ghcr.io/goauthentik/proxy:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      AUTHENTIK_HOST: https://auth.{$DOMAIN_NAME}
+      AUTHENTIK_TOKEN: ${AUTHENTIK_TOKEN_COCKPIT}
+      AUTHENTIK_INSECURE: "false"
+      AUTHENTIK_LOG_LEVEL: info
+    networks:
+      - app-network
+    depends_on:
+      - authentik-server
+
+  authentik_proxy_waha:
+    image: ghcr.io/goauthentik/proxy:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      AUTHENTIK_HOST: https://auth.{$DOMAIN_NAME}
+      AUTHENTIK_TOKEN: ${AUTHENTIK_TOKEN_WAHA}
+      AUTHENTIK_INSECURE: "false"
+      AUTHENTIK_LOG_LEVEL: info
+    networks:
+      - app-network
+    depends_on:
+      - authentik-server
+
 volumes:
   postgres_data:
   caddy_data:
   caddy_config:
   n8n_data:
+  authentik_db:
+  authentik_redis:
+  authentik_certs:
