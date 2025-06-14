@@ -6,9 +6,7 @@ O objetivo é criar uma configuração padronizada, segura, versionada e facilme
 
 ## 🎯 Status Atual do Projeto
 
-Este projeto está em desenvolvimento ativo. Atualmente, os scripts de bootstrap, limpeza e manutenção (`manter_ativo.sh`) estão funcionais. Os serviços base como Caddy e PostgreSQL estão operacionais, e a configuração inicial do n8n via Docker Compose está presente.
-
-Outros serviços como Cockpit, n8n, Caddy e PostgreSQL já estão operacionais. Para detalhes sobre o progresso e as próximas etapas, consulte nosso [ROADMAP.md](ROADMAP.md).
+Este projeto está funcional e todos os serviços listados (Authentik, Caddy, PostgreSQL, n8n, Cockpit) estão operacionais. Os scripts de bootstrap, limpeza e manutenção (`manter_ativo.sh`) também estão funcionais. Para detalhes sobre a configuração e histórico de implementação, consulte nosso [ROADMAP.md](ROADMAP.md).
 
 ## 🔐 Fluxo de Acesso e Segurança
 

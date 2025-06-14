@@ -1,6 +1,6 @@
 # Roadmap de Implantação Detalhado
 
-**Estado Atual:** Fases 0 e 1 concluídas. Fase 2.A (n8n Configuração) parcialmente concluída. Fase 4 (Cockpit Instalação) parcialmente concluída. Implementação do script `manter_ativo.sh` concluída.
+**Estado Atual:** Todas as fases de implantação de serviços (Fase 0, 1, 2, 4, X) estão concluídas, com todos os serviços (PostgreSQL, Caddy, n8n, Cockpit, Authentik) operacionais. A Fase 5 (Backup) está com a configuração implementada, pendente apenas o teste completo de restore.
 
 **Última Atualização:** 17 de Julho de 2024
 
