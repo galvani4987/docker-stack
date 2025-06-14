@@ -6,14 +6,12 @@ O objetivo é criar uma configuração padronizada, segura, versionada e facilme
 
 ## 🎯 Status Atual do Projeto
 
-Este projeto está em desenvolvimento ativo. Atualmente, os scripts de bootstrap, limpeza e manutenção (`manter_ativo.sh`) estão funcionais. Os serviços base como Caddy e PostgreSQL estão operacionais, e a configuração inicial do n8n via Docker Compose está presente.
-
-O serviço Waha está em fase de planejamento e implementação. Outros serviços como Cockpit, n8n, Caddy e PostgreSQL já estão operacionais. Para detalhes sobre o progresso e as próximas etapas, consulte nosso [ROADMAP.md](ROADMAP.md).
+Este projeto está funcional e todos os serviços listados (Authentik, Caddy, PostgreSQL, n8n, Cockpit) estão operacionais. Os scripts de bootstrap, limpeza e manutenção (`manter_ativo.sh`) também estão funcionais. Para detalhes sobre a configuração e histórico de implementação, consulte nosso [ROADMAP.md](ROADMAP.md).
 
 ## 🔐 Fluxo de Acesso e Segurança
 
 Este ambiente opera com **Authentik como o provedor de identidade central e Caddy como o reverse proxy principal**, fornecendo HTTPS automático para todos os serviços.
-1. O acesso ao domínio principal (`https://{$DOMAIN_NAME}`) e a todos os serviços protegidos (n8n, Cockpit, Waha, etc.) é gerenciado pelo Authentik.
+1. O acesso ao domínio principal (`https://{$DOMAIN_NAME}`) e a todos os serviços protegidos (n8n, Cockpit, etc.) é gerenciado pelo Authentik.
 2. Ao tentar acessar um serviço, o usuário é redirecionado para o Authentik para login (se ainda não estiver logado).
 3. Após a autenticação bem-sucedida (que pode incluir Google OAuth), o usuário é redirecionado de volta ao serviço solicitado.
 4. O Authentik também serve como a página de destino principal do stack em `https://{$DOMAIN_NAME}`.
@@ -29,18 +27,16 @@ A pilha de serviços **inclui** os seguintes componentes:
     *   `authentik-redis`: Cache dedicado para o Authentik.
     *   `authentik_proxy_n8n`: Outpost do Authentik para proteger o n8n.
     *   `authentik_proxy_cockpit`: Outpost do Authentik para proteger o Cockpit.
-    *   `authentik_proxy_waha`: Outpost do Authentik para proteger o Waha.
 *   **Caddy:** Proxy reverso moderno e automático com HTTPS. Roteia o tráfego para o Authentik e seus outposts.
 *   **PostgreSQL (Principal):** Banco de dados relacional robusto para aplicações como n8n.
 *   **n8n:** Plataforma de automação de fluxos de trabalho. Acesso via `https://n8n.{$DOMAIN_NAME}` (protegido pelo Authentik).
-*   **Waha:** API HTTP para integração com o WhatsApp. Acesso via `https://waha.{$DOMAIN_NAME}` (protegido pelo Authentik).
 *   **Cockpit:** Interface para gerenciamento do servidor host. Acesso via `https://cockpit.{$DOMAIN_NAME}` (protegido pelo Authentik).
 
 *Nota: Consulte o [ROADMAP.md](ROADMAP.md) para o status atual de implementação de cada serviço.*
 
 ## 🛠️ Scripts de Gerenciamento
 
-Dois scripts essenciais para gerenciamento do servidor:
+Scripts para gerenciamento do servidor:
 
 ### `bootstrap.sh`
 Prepara um novo servidor com todas as dependências necessárias:
@@ -59,6 +55,26 @@ Script para manter serviços ativos (executado via cron):
 ```bash
 0 * * * * /home/ubuntu/docker-stack/scripts/manter_ativo.sh
 ```
+
+### `backup.sh`
+Realiza o backup de dados críticos da aplicação e configurações:
+- Backups de bancos de dados PostgreSQL.
+- Backups de volumes Docker importantes (n8n, Caddy).
+- Backups de arquivos de configuração do projeto (`.env`, `docker-compose.yml`, diretório `config`).
+Os backups são armazenados localmente em `/opt/docker-stack-backups` (configurável no script) e logs detalhados são gerados.
+```bash
+sudo bash scripts/backup.sh
+```
+É recomendado configurar este script para ser executado via cron job para backups regulares. Consulte o `ROADMAP.md` (Fase 5) e o próprio script para detalhes de configuração do cron.
+
+### `restore.sh`
+Restaura os dados da aplicação a partir de um backup específico criado pelo `backup.sh`.
+Requer o caminho para o diretório de backup como argumento.
+**Atenção:** Este script para e remove os containers existentes antes de restaurar.
+```bash
+sudo bash scripts/restore.sh /opt/docker-stack-backups/<TIMESTAMP_DO_BACKUP>
+```
+Consulte o script para mais detalhes sobre o processo de restauração.
 
 ## ⚙️ Implantação em um Novo Servidor
 
@@ -102,10 +118,10 @@ Este repositório é projetado para uma implantação rápida e semi-automatizad
     Após iniciar os serviços, você precisará realizar a configuração inicial do Authentik através da interface web.
     *   **Acesse `https://{$DOMAIN_NAME}/if/flow/initial-setup/`** (substitua `{$DOMAIN_NAME}` pelo seu domínio real).
     *   Siga as instruções para criar o usuário administrador `akadmin`.
-    *   **Consulte o guia detalhado `docs/setup_authentik.md`** para configurar o Google OAuth, proteger as aplicações (n8n, Cockpit, Waha) criando Providers e Outposts, e obter os `AUTHENTIK_TOKEN_*` para adicionar ao seu arquivo `.env`.
+    *   **Consulte o guia detalhado `docs/setup_authentik.md`** para configurar o Google OAuth, proteger as aplicações (n8n, Cockpit) criando Providers e Outposts, e obter os `AUTHENTIK_TOKEN_*` para adicionar ao seu arquivo `.env`.
     *   **Após obter e configurar os `AUTHENTIK_TOKEN_*` no `.env`, reinicie os serviços de proxy do Authentik:**
         ```bash
-        docker compose restart authentik_proxy_n8n authentik_proxy_cockpit authentik_proxy_waha
+        docker compose restart authentik_proxy_n8n authentik_proxy_cockpit
         ```
 
 6.  **Configurações Manuais Pós-Instalação (Outras):**
@@ -143,7 +159,7 @@ As seguintes variáveis devem ser configuradas no seu arquivo `.env`:
 -   `POSTGRES_USER=n8n`
 -   `POSTGRES_PASSWORD=<STRONG_PASSWORD_FOR_N8N_DB>`
 
--   `N8N_DB_TYPE=postgres`
+-   `N8N_DB_TYPE=postgresdb`
 -   `N8N_DB_POSTGRESDB_HOST=postgres`
 -   `N8N_DB_POSTGRESDB_PORT=5432`
 -   `N8N_DB_POSTGRESDB_USER=${POSTGRES_USER}`
@@ -152,13 +168,6 @@ As seguintes variáveis devem ser configuradas no seu arquivo `.env`:
 -   `N8N_WEBHOOK_URL=https://n8n.{$DOMAIN_NAME}`
 -   `N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true`
 -   `N8N_RUNNERS_ENABLED=false`
-
--   `WHATSAPP_API_KEY=<YOUR_WAHA_API_KEY>`
--   `WAHA_BASE_URL=https://waha.{$DOMAIN_NAME}`
--   `WHATSAPP_HOOK_URL=https://n8n.{$DOMAIN_NAME}/webhook/whatsapp`
--   `WHATSAPP_HOOK_EVENTS=message,ack`
--   `WAHA_DEBUG_MODE=false`
--   `WAHA_LOG_LEVEL=info`
 
 -   `AUTHENTIK_POSTGRES_DB=authentik`
 -   `AUTHENTIK_POSTGRES_USER=authentik`
@@ -175,7 +184,6 @@ As seguintes variáveis devem ser configuradas no seu arquivo `.env`:
 
 -   `AUTHENTIK_TOKEN_N8N=<AUTHENTIK_OUTPOST_TOKEN_FOR_N8N>`
 -   `AUTHENTIK_TOKEN_COCKPIT=<AUTHENTIK_OUTPOST_TOKEN_FOR_COCKPIT>`
--   `AUTHENTIK_TOKEN_WAHA=<AUTHENTIK_OUTPOST_TOKEN_FOR_WAHA>`
 
 ## 🚨 Troubleshooting
 

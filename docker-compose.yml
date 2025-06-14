@@ -21,7 +21,7 @@ services:
       - app-network
 
   caddy:
-    image: caddy:alpine
+    image: caddy:2.10.0-alpine
     container_name: caddy
     ports:
       - "80:80"
@@ -37,7 +37,7 @@ services:
     restart: unless-stopped
 
   n8n:
-    image: n8nio/n8n:latest
+    image: n8nio/n8n:1.97.1
     container_name: n8n
     restart: unless-stopped
     env_file:
@@ -63,30 +63,8 @@ services:
       postgres:
         condition: service_started
 
-  waha:
-    image: devlikeapro/waha:arm # Using the latest tag as per docs
-    container_name: waha
-    restart: unless-stopped
-    env_file:
-      - .env
-    # Ports are commented out by default after initial QR scan.
-    # For initial setup, uncomment to scan QR code via http://localhost:3000 or http://<server_ip>:3000
-    # Make sure your server's firewall allows port 3000 if accessing remotely for setup.
-    # ports:
-    #   - "127.0.0.1:3000:3000" # Expose only on host for security during setup
-    volumes:
-      - ./config/waha/sessions:/app/.sessions # Persistent sessions
-      - ./config/waha/media:/app/.media       # Persistent media files
-    networks:
-      - app-network
-    logging: # Recommended logging configuration from WAHA docs
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "5"
-
   authentik-postgres:
-    image: docker.io/library/postgres:15-alpine
+    image: postgres:15-alpine
     restart: unless-stopped
     env_file: .env
     environment:
@@ -104,7 +82,7 @@ services:
       retries: 5
 
   authentik-redis:
-    image: docker.io/library/redis:alpine
+    image: redis:8.0.2-alpine
     restart: unless-stopped
     volumes:
       - authentik_redis:/data
@@ -117,7 +95,7 @@ services:
       retries: 5
 
   authentik-server:
-    image: ghcr.io/goauthentik/server:latest
+    image: ghcr.io/goauthentik/server:2025.6.1
     restart: unless-stopped
     env_file: .env
     environment:
@@ -152,7 +130,7 @@ services:
         condition: service_healthy
 
   authentik-worker:
-    image: ghcr.io/goauthentik/server:latest
+    image: ghcr.io/goauthentik/server:2025.6.1
     restart: unless-stopped
     command: worker
     env_file: .env
@@ -185,7 +163,7 @@ services:
         condition: service_healthy
 
   authentik_proxy_n8n:
-    image: ghcr.io/goauthentik/proxy:latest
+    image: ghcr.io/goauthentik/proxy:2025.6.1
     restart: unless-stopped
     env_file: .env
     environment:
@@ -199,26 +177,12 @@ services:
       - authentik-server
 
   authentik_proxy_cockpit:
-    image: ghcr.io/goauthentik/proxy:latest
+    image: ghcr.io/goauthentik/proxy:2025.6.1
     restart: unless-stopped
     env_file: .env
     environment:
       AUTHENTIK_HOST: https://auth.{$DOMAIN_NAME}
       AUTHENTIK_TOKEN: ${AUTHENTIK_TOKEN_COCKPIT}
-      AUTHENTIK_INSECURE: "false"
-      AUTHENTIK_LOG_LEVEL: info
-    networks:
-      - app-network
-    depends_on:
-      - authentik-server
-
-  authentik_proxy_waha:
-    image: ghcr.io/goauthentik/proxy:latest
-    restart: unless-stopped
-    env_file: .env
-    environment:
-      AUTHENTIK_HOST: https://auth.{$DOMAIN_NAME}
-      AUTHENTIK_TOKEN: ${AUTHENTIK_TOKEN_WAHA}
       AUTHENTIK_INSECURE: "false"
       AUTHENTIK_LOG_LEVEL: info
     networks:

@@ -170,7 +170,7 @@ fi
 log_message "INFO: Starting restoration of mapped configuration directories..."
 MAPPED_CONFIG_DIRS_PARENT="${PROJECT_ROOT_DIR}/config"
 # These are the names of the subdirectories within ./config that were backed up.
-MAPPED_CONFIG_SUBDIRS_TO_RESTORE="caddy waha"
+MAPPED_CONFIG_SUBDIRS_TO_RESTORE="caddy"
 
 RESTORE_CONFIG_SUCCESSFUL_FLAG=true # Use a new flag for this specific section
 
@@ -216,12 +216,54 @@ if ! ${RESTORE_CONFIG_SUCCESSFUL_FLAG}; then
     # Consider exiting if any config restore fails: exit 1
 fi
 
+# --- Restore Authentik Mapped Project Directories ---
+log_message "INFO: Starting restoration of Authentik mapped project directories..."
+AUTHENTIK_MAPPED_PROJECT_DIRS_TO_RESTORE="media custom-templates" # Relative to PROJECT_ROOT_DIR
+
+RESTORE_AUTHENTIK_MAPPED_SUCCESSFUL_FLAG=true
+
+for dir_name in ${AUTHENTIK_MAPPED_PROJECT_DIRS_TO_RESTORE}; do
+    source_archive_name="authentik_${dir_name}.tar.gz" # Matches backup.sh
+    source_archive_path="${BACKUP_SOURCE_DIR}/${source_archive_name}"
+    target_extract_parent_dir="${PROJECT_ROOT_DIR}" # Extracts to PROJECT_ROOT_DIR/media, etc.
+    target_subdir_path="${target_extract_parent_dir}/${dir_name}"
+
+    if [ -f "${source_archive_path}" ]; then
+        log_message "INFO: Restoring Authentik mapped directory '${dir_name}' from '${source_archive_path}'..."
+
+        log_message "INFO: Removing existing directory '${target_subdir_path}' if it exists, before extraction..."
+        if rm -rf "${target_subdir_path}"; then
+            log_message "INFO: Successfully removed existing '${target_subdir_path}'."
+        else
+            log_message "WARN: Could not remove existing '${target_subdir_path}' (it may not have existed). Continuing."
+        fi
+
+        mkdir -p "${target_extract_parent_dir}" # Should already exist (PROJECT_ROOT_DIR)
+
+        log_message "INFO: Extracting '${source_archive_path}' to '${target_extract_parent_dir}'..."
+        # Backup was: tar -czvf "${backup_filepath}" -C "${PROJECT_ROOT_DIR}" "${dir_name}"
+        # So, extraction to PROJECT_ROOT_DIR is correct.
+        if tar -xzvf "${source_archive_path}" -C "${target_extract_parent_dir}"; then
+            log_message "INFO: Successfully restored and extracted '${dir_name}' to '${target_extract_parent_dir}'."
+        else
+            log_message "ERROR: Failed to extract '${source_archive_path}' for '${dir_name}'."
+            RESTORE_AUTHENTIK_MAPPED_SUCCESSFUL_FLAG=false
+        fi
+    else
+        log_message "WARN: Backup archive '${source_archive_name}' not found. Skipping restore for '${dir_name}'."
+    fi
+done
+
+if ! ${RESTORE_AUTHENTIK_MAPPED_SUCCESSFUL_FLAG}; then
+    log_message "ERROR: One or more Authentik mapped project directories could not be fully restored."
+    # Optionally exit
+fi
 
 # --- Restore Docker Named Volumes ---
 log_message "INFO: Starting restoration of Docker named volumes..."
 # These are the suffixes for volumes like ${COMPOSE_PROJECT_NAME}_n8n_data, etc.
 # Assumes backup.sh created archives like 'volume_n8n_data.tar.gz' inside BACKUP_SOURCE_DIR.
-DOCKER_VOLUMES_TO_RESTORE="n8n_data caddy_data caddy_config postgres_data" # Added postgres_data
+DOCKER_VOLUMES_TO_RESTORE="n8n_data caddy_data caddy_config postgres_data authentik_redis authentik_certs"
 
 RESTORE_VOLUME_SUCCESSFUL_FLAG=true # Use a new flag for this specific section
 
@@ -347,6 +389,66 @@ else
     log_message "INFO: PostgreSQL will rely on data restored from its volume backup (if that was performed and successful)."
 fi
 
+# --- Restore Authentik PostgreSQL Database from SQL Dump ---
+log_message "INFO: Starting Authentik PostgreSQL database restoration from SQL dump..."
+AUTHENTIK_SQL_DUMP_GZ_NAME="authentik_postgres_dump.sql.gz"
+AUTHENTIK_SQL_DUMP_GZ_PATH="${BACKUP_SOURCE_DIR}/${AUTHENTIK_SQL_DUMP_GZ_NAME}"
+AUTHENTIK_SQL_DUMP_FILE_PATH_TEMP="${BACKUP_SOURCE_DIR}/authentik_postgres_dump_to_restore.sql"
+
+if [ -f "${AUTHENTIK_SQL_DUMP_GZ_PATH}" ]; then
+    log_message "INFO: Decompressing Authentik PostgreSQL dump file '${AUTHENTIK_SQL_DUMP_GZ_PATH}' to '${AUTHENTIK_SQL_DUMP_FILE_PATH_TEMP}'..."
+    if gunzip -c "${AUTHENTIK_SQL_DUMP_GZ_PATH}" > "${AUTHENTIK_SQL_DUMP_FILE_PATH_TEMP}"; then
+        log_message "INFO: Successfully decompressed Authentik dump to '${AUTHENTIK_SQL_DUMP_FILE_PATH_TEMP}'."
+    else
+        log_message "ERROR: Failed to decompress '${AUTHENTIK_SQL_DUMP_GZ_PATH}'. Skipping Authentik PostgreSQL restore."
+        rm -f "${AUTHENTIK_SQL_DUMP_FILE_PATH_TEMP}" # Clean up
+    fi
+
+    if [ -f "${AUTHENTIK_SQL_DUMP_FILE_PATH_TEMP}" ]; then
+        log_message "INFO: Ensuring only Authentik PostgreSQL service is running for restore..."
+        # The authentik_db volume should have been created in the 'Restore Docker Named Volumes' step if it didn't exist.
+        # The dump file should recreate necessary DB structures.
+
+        log_message "INFO: Starting Authentik PostgreSQL service (authentik-postgres)..."
+        if ! docker compose -f "${DOCKER_COMPOSE_FILE}" up -d authentik-postgres; then
+            log_message "ERROR: Failed to start authentik-postgres service. Cannot restore Authentik database."
+            rm -f "${AUTHENTIK_SQL_DUMP_FILE_PATH_TEMP}"
+            exit 1 # Critical
+        fi
+
+        log_message "INFO: Waiting for Authentik PostgreSQL to initialize (e.g., 15 seconds)..."
+        sleep 15
+
+        AUTHENTIK_POSTGRES_CONTAINER_ID=$(docker compose -f "${DOCKER_COMPOSE_FILE}" ps -q authentik-postgres)
+        if [ -z "${AUTHENTIK_POSTGRES_CONTAINER_ID}" ]; then
+            log_message "ERROR: Authentik PostgreSQL container (authentik-postgres) not found or not running. Cannot restore."
+            rm -f "${AUTHENTIK_SQL_DUMP_FILE_PATH_TEMP}"
+            exit 1 # Critical
+        fi
+        log_message "INFO: Authentik PostgreSQL container ID: ${AUTHENTIK_POSTGRES_CONTAINER_ID}"
+
+        if [ -z "${AUTHENTIK_POSTGRES_USER:-}" ] || [ -z "${AUTHENTIK_POSTGRES_PASSWORD:-}" ]; then
+            log_message "ERROR: AUTHENTIK_POSTGRES_USER or AUTHENTIK_POSTGRES_PASSWORD not set. Cannot restore Authentik PostgreSQL."
+            rm -f "${AUTHENTIK_SQL_DUMP_FILE_PATH_TEMP}"
+            exit 1 # Critical
+        fi
+
+        log_message "INFO: Restoring Authentik database from '${AUTHENTIK_SQL_DUMP_FILE_PATH_TEMP}'..."
+        ABS_AUTHENTIK_SQL_DUMP_FILE_PATH_TEMP=$(cd "$(dirname "${AUTHENTIK_SQL_DUMP_FILE_PATH_TEMP}")" && pwd)/$(basename "${AUTHENTIK_SQL_DUMP_FILE_PATH_TEMP}")
+
+        # Using 'postgres' as the maintenance DB to connect to, similar to the main PG restore.
+        if docker exec -i -e PGPASSWORD="${AUTHENTIK_POSTGRES_PASSWORD}" "${AUTHENTIK_POSTGRES_CONTAINER_ID}" psql -U "${AUTHENTIK_POSTGRES_USER}" -d postgres < "${ABS_AUTHENTIK_SQL_DUMP_FILE_PATH_TEMP}"; then
+            log_message "INFO: Authentik PostgreSQL database restore completed successfully."
+        else
+            log_message "ERROR: Authentik PostgreSQL database restore failed."
+        fi
+
+        log_message "INFO: Cleaning up decompressed Authentik SQL dump file: ${AUTHENTIK_SQL_DUMP_FILE_PATH_TEMP}"
+        rm -f "${AUTHENTIK_SQL_DUMP_FILE_PATH_TEMP}"
+    fi
+else
+    log_message "WARN: Authentik PostgreSQL dump file '${AUTHENTIK_SQL_DUMP_GZ_NAME}' not found. Authentik DB will rely on its volume data if 'authentik_db' was part of DOCKER_VOLUMES_TO_RESTORE (which it shouldn't be if SQL dump is preferred)."
+fi
 
 # --- Start All Services ---
 log_message "INFO: Starting all services based on restored configuration and data..."

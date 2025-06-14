@@ -93,7 +93,7 @@ set +a # Stop automatically exporting variables
 
 # --- Stop Services ---
 log_message "INFO: Stopping application services to ensure data consistency..."
-SERVICES_TO_STOP="n8n waha caddy" # Define services that don't need special handling like DBs for their dump
+SERVICES_TO_STOP="n8n caddy authentik-server authentik-worker authentik-redis" # Define services that don't need special handling like DBs for their dump
 
 if docker compose -f "${DOCKER_COMPOSE_FILE}" stop ${SERVICES_TO_STOP}; then
     log_message "INFO: Successfully stopped services: ${SERVICES_TO_STOP}."
@@ -165,11 +165,63 @@ else
     fi
 fi
 
+# --- Backup Authentik PostgreSQL ---
+log_message "INFO: Starting Authentik PostgreSQL backup..."
+# Ensure AUTHENTIK_POSTGRES_USER is set from the sourced .env file
+if [ -z "${AUTHENTIK_POSTGRES_USER:-}" ]; then
+    log_message "ERROR: AUTHENTIK_POSTGRES_USER is not set. Cannot perform Authentik PostgreSQL backup."
+else
+    AUTHENTIK_POSTGRES_CONTAINER_ID=$(docker compose -f "${DOCKER_COMPOSE_FILE}" ps -q authentik-postgres)
+
+    if [ -z "${AUTHENTIK_POSTGRES_CONTAINER_ID}" ]; then
+        log_message "ERROR: Authentik PostgreSQL container not found or not running. Attempting to start it for backup..."
+        if docker compose -f "${DOCKER_COMPOSE_FILE}" up -d authentik-postgres; then
+            log_message "INFO: Successfully started authentik-postgres container for backup."
+            sleep 10 # Give postgres time to initialize fully
+            AUTHENTIK_POSTGRES_CONTAINER_ID=$(docker compose -f "${DOCKER_COMPOSE_FILE}" ps -q authentik-postgres)
+            if [ -z "${AUTHENTIK_POSTGRES_CONTAINER_ID}" ]; then
+                 log_message "ERROR: Failed to start authentik-postgres container for backup. Skipping Authentik PostgreSQL backup."
+            fi
+        else
+            log_message "ERROR: Could not start authentik-postgres container. Skipping Authentik PostgreSQL backup."
+        fi
+    fi
+
+    if [ -n "${AUTHENTIK_POSTGRES_CONTAINER_ID:-}" ]; then
+        log_message "INFO: Found/Started Authentik PostgreSQL container ID: ${AUTHENTIK_POSTGRES_CONTAINER_ID}"
+        AUTHENTIK_PG_DUMP_FILENAME="authentik_postgres_dump.sql"
+        AUTHENTIK_PG_DUMP_PATH="${CURRENT_BACKUP_DIR}/${AUTHENTIK_PG_DUMP_FILENAME}"
+
+        if [ -z "${AUTHENTIK_POSTGRES_PASSWORD:-}" ]; then
+            log_message "ERROR: AUTHENTIK_POSTGRES_PASSWORD is not set. Cannot perform authenticated Authentik PostgreSQL backup."
+        else
+            log_message "INFO: Performing pg_dumpall for Authentik to ${AUTHENTIK_PG_DUMP_PATH}..."
+            # Note: For Authentik, it's typically one database. pg_dump might be more appropriate if DB name is known.
+            # Using pg_dumpall for consistency with the other DB backup, assuming AUTHENTIK_POSTGRES_USER has rights.
+            # If AUTHENTIK_POSTGRES_DB is defined in .env, pg_dump -d "${AUTHENTIK_POSTGRES_DB}" would be better.
+            # For now, pg_dumpall is used.
+            if docker exec -e PGPASSWORD="${AUTHENTIK_POSTGRES_PASSWORD}" "${AUTHENTIK_POSTGRES_CONTAINER_ID}" pg_dumpall -U "${AUTHENTIK_POSTGRES_USER}" --clean --if-exists > "${AUTHENTIK_PG_DUMP_PATH}"; then
+                log_message "INFO: Authentik PostgreSQL backup successfully created at ${AUTHENTIK_PG_DUMP_PATH}."
+                log_message "INFO: Compressing Authentik PostgreSQL dump..."
+                if gzip "${AUTHENTIK_PG_DUMP_PATH}"; then
+                    log_message "INFO: Authentik PostgreSQL dump compressed successfully to ${AUTHENTIK_PG_DUMP_PATH}.gz."
+                else
+                    log_message "ERROR: Failed to compress Authentik PostgreSQL dump."
+                fi
+            else
+                log_message "ERROR: Authentik PostgreSQL backup failed."
+            fi
+        fi
+    else
+        log_message "INFO: Skipping Authentik PostgreSQL backup as container is not running."
+    fi
+fi
+
 
 # --- Backup Mapped Configuration Directories ---
 log_message "INFO: Starting backup of mapped configuration directories..."
 MAPPED_CONFIG_DIRS_PARENT="${PROJECT_ROOT_DIR}/config"
-MAPPED_CONFIG_SUBDIRS="caddy waha" # Add other config subdirs if any
+MAPPED_CONFIG_SUBDIRS="caddy" # Add other config subdirs if any
 
 for subdir_name in ${MAPPED_CONFIG_SUBDIRS}; do
     source_path="${MAPPED_CONFIG_DIRS_PARENT}/${subdir_name}"
@@ -188,12 +240,34 @@ for subdir_name in ${MAPPED_CONFIG_SUBDIRS}; do
     fi
 done
 
+# --- Backup Authentik Mapped Project Directories ---
+log_message "INFO: Starting backup of Authentik mapped project directories..."
+AUTHENTIK_MAPPED_PROJECT_DIRS="media custom-templates" # Relative to PROJECT_ROOT_DIR
+
+for dir_name in ${AUTHENTIK_MAPPED_PROJECT_DIRS}; do
+    source_path="${PROJECT_ROOT_DIR}/${dir_name}"
+    backup_filename="authentik_${dir_name}.tar.gz"
+    backup_filepath="${CURRENT_BACKUP_DIR}/${backup_filename}"
+
+    if [ -d "${source_path}" ]; then
+        log_message "INFO: Archiving Authentik mapped directory '${source_path}' to '${backup_filepath}'..."
+        # Archive relative to PROJECT_ROOT_DIR to keep the path structure simple in the tarball
+        if tar -czvf "${backup_filepath}" -C "${PROJECT_ROOT_DIR}" "${dir_name}"; then
+            log_message "INFO: Successfully archived '${source_path}'."
+        else
+            log_message "ERROR: Failed to archive '${source_path}'."
+        fi
+    else
+        log_message "WARN: Authentik mapped directory '${source_path}' not found. Skipping."
+    fi
+done
+
 # --- Backup Key Docker Volumes ---
 log_message "INFO: Starting backup of key Docker volumes..."
 # Ensure services using these volumes were stopped in the 'Stop Services' step if direct volume copy is sensitive
-# n8n, caddy were in SERVICES_TO_STOP.
+# n8n, caddy, authentik-server, authentik-worker, authentik-redis were in SERVICES_TO_STOP.
 
-DOCKER_VOLUMES_TO_BACKUP="n8n_data caddy_data caddy_config" # Add other key volumes if any
+DOCKER_VOLUMES_TO_BACKUP="n8n_data caddy_data caddy_config authentik_redis authentik_certs" # Add other key volumes if any
 
 for volume_suffix in ${DOCKER_VOLUMES_TO_BACKUP}; do
     full_volume_name="${COMPOSE_PROJECT_NAME}_${volume_suffix}"

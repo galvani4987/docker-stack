@@ -19,10 +19,13 @@ SERVICES_TO_CHECK=(
   "postgres"
   "caddy"
   "n8n"
+  "authentik-postgres"
+  "authentik-redis"
+  "authentik-server"
+  "authentik-worker"
   # "homer"
   # "redis"
   # "authelia"
-  # "waha"
 )
 
 echo "Serviços a serem verificados: ${SERVICES_TO_CHECK[*]}"

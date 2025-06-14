@@ -21,8 +21,3 @@ n8n.{$DOMAIN_NAME} {
 cockpit.{$DOMAIN_NAME} {
     reverse_proxy authentik_proxy_cockpit:9000
 }
-
-# --- WAHA (WhatsApp Gateway) ---
-waha.{$DOMAIN_NAME} {
-   reverse_proxy authentik_proxy_waha:9000
-}
