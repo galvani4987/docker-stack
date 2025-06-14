@@ -111,27 +111,66 @@ Comandos úteis para operação do sistema:
 
 ## 🚨 Troubleshooting
 
-Problemas comuns e soluções:
+Esta seção aborda problemas comuns e suas possíveis soluções.
 
-1. **Certificados SSL não gerados:**
+### Problema: Certificados SSL não são gerados pelo Caddy
 
-   * Verifique se o DNS está apontando corretamente
-   * Confira os logs do Caddy:
-```bash
-docker compose logs caddy
-```
+Se você estiver enfrentando problemas com a emissão de certificados SSL (HTTPS):
 
-2. **Serviços não comunicando:**
+*   **Verifique a propagação do DNS:**
+    *   Certifique-se de que os registros DNS do seu domínio (e subdomínios) estão corretamente apontados para o endereço IP público do servidor.
+    *   A propagação de DNS pode levar algum tempo. Utilize ferramentas online como `whatsmydns.net` para verificar o status da propagação para os tipos de registro A ou CNAME.
 
-   * Verifique rede Docker:
-```bash
-docker network inspect app-network
-```
+*   **Analise os logs do Caddy:**
+    *   Os logs do Caddy fornecem informações detalhadas sobre o processo de obtenção de certificados.
+    ```bash
+    docker compose logs caddy
+    ```
+    *   Procure por mensagens de erro relacionadas a desafios ACME, timeouts, ou problemas de conectividade.
 
-   * Teste conectividade entre containers:
-```bash
-docker exec -it <container> ping <outro-container>
-```
+*   **Confira as configurações do Caddyfile:**
+    *   Verifique se os nomes de domínio no seu `config/Caddyfile` estão corretos e correspondem aos seus registros DNS.
+    *   Certifique-se de que o email fornecido para a Let's Encrypt no Caddyfile é válido.
+
+*   **Firewall e Portas:**
+    *   Caddy precisa que as portas 80 (para desafios HTTP) e 443 (para TLS-ALPN) estejam acessíveis publicamente. Verifique o firewall do seu provedor de nuvem e o UFW no servidor:
+    ```bash
+    sudo ufw status
+    ```
+
+### Problema: Serviços não se comunicam entre si ou com o exterior
+
+Se os containers Docker não conseguem se comunicar entre si ou com a internet:
+
+*   **Inspecione a Rede Docker:**
+    *   Verifique se todos os serviços relevantes estão conectados à mesma rede Docker (`app-network` neste projeto).
+    ```bash
+    docker network inspect app-network
+    ```
+    *   Confirme se os containers aparecem listados na seção "Containers" da saída do comando.
+
+*   **Teste a conectividade interna:**
+    *   Você pode testar a resolução de nome e a conectividade entre containers usando `ping` ou `curl` de dentro de um container.
+    *   Primeiro, acesse o shell de um container (ex: o container do Caddy):
+        ```bash
+        docker compose exec caddy sh
+        ```
+    *   Dentro do container, tente pingar outro serviço pelo nome definido no `docker-compose.yml` (ex: `ping postgres` ou `ping n8n`).
+        ```sh
+        # Dentro do container do Caddy
+        ping postgres
+        ping n8n
+        ```
+    *   *Nota: Algumas imagens minimalistas podem não incluir `ping` ou `curl`. Use um container que possua essas ferramentas ou instale-as temporariamente se necessário e possível.*
+
+*   **Verifique as regras de firewall do host:**
+    *   Embora o Docker gerencie suas próprias regras de iptables, configurações restritivas de UFW ou firewalls externos podem interferir. Assegure-se de que as políticas `FORWARD` não estejam bloqueando o tráfego entre redes Docker ou para o exterior.
+
+*   **Consulte os logs dos serviços envolvidos:**
+    *   Logs específicos dos containers podem indicar problemas de configuração de rede, erros de resolução de nome, ou falhas ao tentar estabelecer conexões.
+    ```bash
+    docker compose logs nome_do_servico_1 nome_do_servico_2
+    ```
 
 ## 🤝 Contribuição
 Contribuições são bem-vindas! Siga o fluxo:
