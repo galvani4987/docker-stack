@@ -21,7 +21,7 @@ services:
       - app-network
 
   caddy:
-    image: caddy:alpine
+    image: caddy:2.10.0-alpine
     container_name: caddy
     ports:
       - "80:80"
@@ -37,7 +37,7 @@ services:
     restart: unless-stopped
 
   n8n:
-    image: n8nio/n8n:latest
+    image: n8nio/n8n:1.97.1
     container_name: n8n
     restart: unless-stopped
     env_file:
@@ -64,7 +64,7 @@ services:
         condition: service_started
 
   authentik-postgres:
-    image: docker.io/library/postgres:15-alpine
+    image: postgres:15-alpine
     restart: unless-stopped
     env_file: .env
     environment:
@@ -82,7 +82,7 @@ services:
       retries: 5
 
   authentik-redis:
-    image: docker.io/library/redis:alpine
+    image: redis:8.0.2-alpine
     restart: unless-stopped
     volumes:
       - authentik_redis:/data
@@ -95,7 +95,7 @@ services:
       retries: 5
 
   authentik-server:
-    image: ghcr.io/goauthentik/server:latest
+    image: ghcr.io/goauthentik/server:2025.6.1
     restart: unless-stopped
     env_file: .env
     environment:
@@ -130,7 +130,7 @@ services:
         condition: service_healthy
 
   authentik-worker:
-    image: ghcr.io/goauthentik/server:latest
+    image: ghcr.io/goauthentik/server:2025.6.1
     restart: unless-stopped
     command: worker
     env_file: .env
@@ -163,7 +163,7 @@ services:
         condition: service_healthy
 
   authentik_proxy_n8n:
-    image: ghcr.io/goauthentik/proxy:latest
+    image: ghcr.io/goauthentik/proxy:2025.6.1
     restart: unless-stopped
     env_file: .env
     environment:
@@ -177,7 +177,7 @@ services:
       - authentik-server
 
   authentik_proxy_cockpit:
-    image: ghcr.io/goauthentik/proxy:latest
+    image: ghcr.io/goauthentik/proxy:2025.6.1
     restart: unless-stopped
     env_file: .env
     environment:
