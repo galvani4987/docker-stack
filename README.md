@@ -159,7 +159,7 @@ As seguintes variáveis devem ser configuradas no seu arquivo `.env`:
 -   `POSTGRES_USER=n8n`
 -   `POSTGRES_PASSWORD=<STRONG_PASSWORD_FOR_N8N_DB>`
 
--   `N8N_DB_TYPE=postgres`
+-   `N8N_DB_TYPE=postgresdb`
 -   `N8N_DB_POSTGRESDB_HOST=postgres`
 -   `N8N_DB_POSTGRESDB_PORT=5432`
 -   `N8N_DB_POSTGRESDB_USER=${POSTGRES_USER}`
