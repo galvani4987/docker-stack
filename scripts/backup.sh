@@ -93,7 +93,7 @@ set +a # Stop automatically exporting variables
 
 # --- Stop Services ---
 log_message "INFO: Stopping application services to ensure data consistency..."
-SERVICES_TO_STOP="n8n waha caddy" # Define services that don't need special handling like DBs for their dump
+SERVICES_TO_STOP="n8n caddy" # Define services that don't need special handling like DBs for their dump
 
 if docker compose -f "${DOCKER_COMPOSE_FILE}" stop ${SERVICES_TO_STOP}; then
     log_message "INFO: Successfully stopped services: ${SERVICES_TO_STOP}."
@@ -169,7 +169,7 @@ fi
 # --- Backup Mapped Configuration Directories ---
 log_message "INFO: Starting backup of mapped configuration directories..."
 MAPPED_CONFIG_DIRS_PARENT="${PROJECT_ROOT_DIR}/config"
-MAPPED_CONFIG_SUBDIRS="caddy waha" # Add other config subdirs if any
+MAPPED_CONFIG_SUBDIRS="caddy" # Add other config subdirs if any
 
 for subdir_name in ${MAPPED_CONFIG_SUBDIRS}; do
     source_path="${MAPPED_CONFIG_DIRS_PARENT}/${subdir_name}"

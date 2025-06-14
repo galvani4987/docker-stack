@@ -170,7 +170,7 @@ fi
 log_message "INFO: Starting restoration of mapped configuration directories..."
 MAPPED_CONFIG_DIRS_PARENT="${PROJECT_ROOT_DIR}/config"
 # These are the names of the subdirectories within ./config that were backed up.
-MAPPED_CONFIG_SUBDIRS_TO_RESTORE="caddy waha"
+MAPPED_CONFIG_SUBDIRS_TO_RESTORE="caddy"
 
 RESTORE_CONFIG_SUCCESSFUL_FLAG=true # Use a new flag for this specific section
 

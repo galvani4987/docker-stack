@@ -22,7 +22,6 @@ SERVICES_TO_CHECK=(
   # "homer"
   # "redis"
   # "authelia"
-  # "waha"
 )
 
 echo "Serviços a serem verificados: ${SERVICES_TO_CHECK[*]}"

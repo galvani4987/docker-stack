@@ -109,12 +109,6 @@ n8n.galvani4987.duckdns.org {
     }
 }
 
-# Exemplo de configuração para WAHA (WhatsApp API)
-# (waha.galvani4987.duckdns.org)
-waha.galvani4987.duckdns.org {
-    reverse_proxy waha:3000 # 'waha' é o nome do serviço WAHA no Docker Compose
-}
-
 # Exemplo de configuração para Cockpit (se acessado via Caddy)
 # (cockpit.galvani4987.duckdns.org)
 # cockpit.galvani4987.duckdns.org {
