@@ -75,30 +75,6 @@ services:
     networks:
       - app-network
 
-  authelia:
-    image: authelia/authelia:latest
-    container_name: authelia
-    restart: unless-stopped
-    env_file:
-      - .env # For all AUTHELIA_ variables
-    volumes:
-      - ./config/authelia:/config
-      # Optional: Mount for /var/log/authelia if not using default stdout/stderr logging
-      # - authelia_logs:/var/log/authelia
-    networks:
-      - app-network
-    depends_on:
-      redis:
-        condition: service_started # Wait for Redis to be ready
-      postgres: # For notifications/audit log as per docs/setup_authelia.md
-        condition: service_started
-    # healthcheck: # Optional, but good for production
-    #   test: ["CMD", "authelia", "healthcheck"]
-    #   interval: 5s
-    #   timeout: 5s
-    #   retries: 3
-    #   start_period: 30s
-
   homer:
     image: b4bz/homer:latest
     container_name: homer
