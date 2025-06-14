@@ -1,6 +1,6 @@
 # Tutorial: Configurando o PostgreSQL
 
-Este tutorial descreve a configuração do PostgreSQL no projeto Docker Stack VPS. O PostgreSQL serve como o sistema de gerenciamento de banco de dados relacional para várias aplicações na pilha, como n8n e Authelia.
+Este tutorial descreve a configuração do PostgreSQL no projeto Docker Stack VPS. O PostgreSQL serve como o sistema de gerenciamento de banco de dados relacional para várias aplicações na pilha, como n8n.
 
 A configuração base do PostgreSQL já está definida nos arquivos `docker-compose.yml` e `.env.example` do projeto, e é estabelecida durante a Fase 1.A do [ROADMAP.md](../../ROADMAP.md).
 
@@ -24,7 +24,7 @@ POSTGRES_PASSWORD=sua_senha_segura_aqui_para_postgres
 ```
 
 *   **`POSTGRES_DB`**: Define o nome do banco de dados padrão que será criado quando o PostgreSQL iniciar pela primeira vez com um diretório de dados vazio. No projeto, este é `main_db`.
-    *   Serviços como n8n e Authelia (usando um schema dedicado) utilizarão este banco de dados.
+    *   Serviços como n8n utilizarão este banco de dados.
 *   **`POSTGRES_USER`**: Define o nome do superusuário padrão do PostgreSQL. No projeto, este é `admin`.
     *   Este usuário terá controle total sobre o servidor PostgreSQL e será usado pelas aplicações para se conectar ao banco de dados.
 *   **`POSTGRES_PASSWORD`**: Define a senha para o `POSTGRES_USER`. **É crucial definir uma senha forte e única aqui.**
@@ -74,7 +74,6 @@ volumes:
 ## 4. Uso pelas Aplicações
 
 *   **n8n:** Conecta-se ao PostgreSQL usando as credenciais `POSTGRES_USER` e `POSTGRES_PASSWORD` para o banco de dados `POSTGRES_DB`.
-*   **Authelia:** Conecta-se ao PostgreSQL usando as mesmas credenciais, mas é configurado para usar um schema dedicado (ex: `authelia`) dentro do banco de dados `POSTGRES_DB` para armazenar seus dados (como segredos TOTP). Authelia criará este schema automaticamente se ele não existir e o usuário tiver permissões para isso (o que o `POSTGRES_USER`, sendo superusuário, tem).
 
 ## 5. Verificação (Conforme Roadmap Fase 1.A)
 

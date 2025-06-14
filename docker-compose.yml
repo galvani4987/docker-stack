@@ -63,56 +63,6 @@ services:
       postgres:
         condition: service_started
 
-  redis:
-    image: redis:7.4.4-alpine
-    container_name: redis
-    restart: unless-stopped
-    command: redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
-    env_file:
-      - .env # To ensure REDIS_PASSWORD from .env is available
-    volumes:
-      - redis_data:/data
-    networks:
-      - app-network
-
-  authelia:
-    image: authelia/authelia:latest
-    container_name: authelia
-    restart: unless-stopped
-    env_file:
-      - .env # For all AUTHELIA_ variables
-    volumes:
-      - ./config/authelia:/config
-      # Optional: Mount for /var/log/authelia if not using default stdout/stderr logging
-      # - authelia_logs:/var/log/authelia
-    networks:
-      - app-network
-    depends_on:
-      redis:
-        condition: service_started # Wait for Redis to be ready
-      postgres: # For notifications/audit log as per docs/setup_authelia.md
-        condition: service_started
-    # healthcheck: # Optional, but good for production
-    #   test: ["CMD", "authelia", "healthcheck"]
-    #   interval: 5s
-    #   timeout: 5s
-    #   retries: 3
-    #   start_period: 30s
-
-  homer:
-    image: b4bz/homer:latest
-    container_name: homer
-    user: "1000:1000" # Ensure this is appropriate for your host system's permissions for ./config/homer
-    volumes:
-      - ./config/homer:/www/assets
-    networks:
-      - app-network
-    restart: unless-stopped
-    environment:
-      - INIT_ASSETS=0 # Prevents re-initialization of assets on every start if config.yml is managed by user
-      # - UID=1000 # Not strictly needed if user: "1000:1000" is set and image supports it
-      # - GID=1000 # Not strictly needed
-
   waha:
     image: devlikeapro/waha:arm # Using the latest tag as per docs
     container_name: waha
@@ -140,4 +90,3 @@ volumes:
   caddy_data:
   caddy_config:
   n8n_data:
-  redis_data:

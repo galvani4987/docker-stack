@@ -2,34 +2,16 @@
     email ${CADDY_EMAIL}
 }
 
-# --- Portal Authelia ---
-authelia.galvani4987.duckdns.org {
-    reverse_proxy authelia:9091
-}
-
-# --- Homer (Dashboard Principal) - Protegido pelo Authelia ---
-galvani4987.duckdns.org {
-    reverse_proxy homer:8080 # Assuming homer service on port 8080
-    forward_auth authelia:9091 {
-        uri /api/verify?rd=https://authelia.galvani4987.duckdns.org/
-        copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
-    }
-}
-
-# --- n8n - Protegido pelo Authelia ---
+# --- n8n ---
 n8n.galvani4987.duckdns.org {
     reverse_proxy n8n:5678 {
         header_up Host {host}
         header_up X-Real-IP {remote} # {remote} is <ip>:<port>, {client_ip} is just <ip>
         header_up X-Forwarded-Proto {scheme}
     }
-    forward_auth authelia:9091 {
-        uri /api/verify?rd=https://authelia.galvani4987.duckdns.org/
-        copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
-    }
 }
 
-# --- Cockpit - Protegido pelo Authelia ---
+# --- Cockpit ---
 cockpit.galvani4987.duckdns.org {
     reverse_proxy host.docker.internal:9090 {
         # Using {client_ip} which is Caddy's placeholder for the client's IP address
@@ -38,17 +20,9 @@ cockpit.galvani4987.duckdns.org {
         header_up X-Forwarded-For {client_ip}
         header_up X-Forwarded-Proto {scheme}
     }
-    forward_auth authelia:9091 {
-        uri /api/verify?rd=https://authelia.galvani4987.duckdns.org/
-        copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
-    }
 }
 
-# --- WAHA (WhatsApp Gateway) - Protegido pelo Authelia ---
+# --- WAHA (WhatsApp Gateway) ---
 waha.galvani4987.duckdns.org {
    reverse_proxy waha:3000 # Assuming waha service on port 3000
-   forward_auth authelia:9091 {
-       uri /api/verify?rd=https://authelia.galvani4987.duckdns.org/
-       copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
-   }
 }

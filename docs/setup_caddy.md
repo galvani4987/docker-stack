@@ -8,7 +8,6 @@ A configuração base do Caddy já está definida nos arquivos `docker-compose.y
 
 *   **Imagem Docker:** `caddy:alpine` (versão específica, ex: `caddy:2.10-alpine`, usando Alpine Linux para um tamanho reduzido).
 *   **Função Principal:** Servir como o ponto de entrada para todos os serviços web, fornecendo HTTPS automático e roteando o tráfego para os containers apropriados.
-*   **Integração com Authelia:** Utiliza a diretiva `forward_auth` para delegar decisões de autenticação ao Authelia antes de permitir acesso aos serviços protegidos.
 *   **Configuração:** Gerenciada primariamente através do arquivo `Caddyfile`.
 *   **Persistência:** Volumes Docker são usados para persistir certificados TLS e outras configurações/dados do Caddy.
 
@@ -99,30 +98,10 @@ O arquivo `config/Caddyfile` define como o Caddy gerencia seus sites. Ele consis
     # default_sni seu_dominio_principal.com
 }
 
-# --- Portal Authelia ---
-# (authelia.galvani4987.duckdns.org)
-authelia.galvani4987.duckdns.org {
-    reverse_proxy authelia:9091 # 'authelia' é o nome do serviço Authelia no Docker Compose
-}
-
-# --- Homer (Dashboard Principal) - Protegido pelo Authelia ---
-# (galvani4987.duckdns.org)
-galvani4987.duckdns.org {
-    forward_auth authelia:9091 {
-        uri /api/authz/forward-auth
-        copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
-    }
-    reverse_proxy homer:8080 # 'homer' é o nome do serviço Homer
-}
-
-# --- n8n - Protegido pelo Authelia ---
+# Exemplo de configuração para n8n
 # (n8n.galvani4987.duckdns.org)
 n8n.galvani4987.duckdns.org {
-    forward_auth authelia:9091 {
-        uri /api/authz/forward-auth
-        copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
-    }
-    reverse_proxy n8n:5678 { # 'n8n' é o nome do serviço n8n
+    reverse_proxy n8n:5678 { # 'n8n' é o nome do serviço n8n no Docker Compose
         # Headers adicionais úteis para n8n
         header_up Host {host}
         header_up X-Real-IP {remote}
@@ -130,15 +109,22 @@ n8n.galvani4987.duckdns.org {
     }
 }
 
-# --- WAHA (WhatsApp API) - Protegido pelo Authelia ---
+# Exemplo de configuração para WAHA (WhatsApp API)
 # (waha.galvani4987.duckdns.org)
 waha.galvani4987.duckdns.org {
-    forward_auth authelia:9091 {
-        uri /api/authz/forward-auth
-        copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
-    }
-    reverse_proxy waha:3000 # 'waha' é o nome do serviço WAHA
+    reverse_proxy waha:3000 # 'waha' é o nome do serviço WAHA no Docker Compose
 }
+
+# Exemplo de configuração para Cockpit (se acessado via Caddy)
+# (cockpit.galvani4987.duckdns.org)
+# cockpit.galvani4987.duckdns.org {
+#    reverse_proxy host.docker.internal:9090 {
+#        header_up Host {host}
+#        header_up X-Real-IP {client_ip}
+#        header_up X-Forwarded-For {client_ip}
+#        header_up X-Forwarded-Proto {scheme}
+#    }
+# }
 
 # Adicione outros serviços aqui seguindo o mesmo padrão.
 ```
@@ -146,11 +132,7 @@ waha.galvani4987.duckdns.org {
 **Diretivas Chave:**
 *   **Bloco Global `{...}`**: Define opções que se aplicam a todos os sites, como o email para ACME (Let's Encrypt).
 *   **Bloco de Site `dominio.com { ... }`**: Define a configuração para um domínio específico.
-*   **`reverse_proxy <upstream_address>`**: Envia o tráfego para um serviço backend (outro container). Ex: `reverse_proxy homer:8080`.
-*   **`forward_auth <auth_gateway_address> { ... }`**:
-    *   Envia uma sub-requisição para o gateway de autenticação (Authelia).
-    *   `uri /api/authz/forward-auth`: Endpoint padrão do Authelia para verificar a autenticação.
-    *   `copy_headers ...`: Copia headers com informações do usuário do Authelia para a requisição que vai para o serviço backend.
+*   **`reverse_proxy <upstream_address>`**: Envia o tráfego para um serviço backend (outro container). Ex: `reverse_proxy n8n:5678`.
 *   **Placeholders:** Caddy usa placeholders como `{host}`, `{remote}`, `{scheme}` que são preenchidos dinamicamente.
 
 ## 5. HTTPS Automático
@@ -184,9 +166,9 @@ A verificação do Caddy envolve:
     docker compose logs caddy
     ```
     Procure por mensagens indicando que os sites foram servidos, certificados foram obtidos (se for a primeira vez), e que está pronto para aceitar conexões.
-3.  **Testar acesso:** Tentar acessar os domínios configurados (ex: `https://galvani4987.duckdns.org`) no navegador para confirmar que o HTTPS está funcionando e o conteúdo esperado (ou o portal Authelia) é exibido.
+3.  **Testar acesso:** Tentar acessar os domínios configurados (ex: `https://n8n.galvani4987.duckdns.org`) no navegador para confirmar que o HTTPS está funcionando e o conteúdo esperado é exibido.
 
 ## Conclusão
 
-Caddy é um componente central e poderoso desta pilha, simplificando o gerenciamento de reverse proxy e SSL/TLS. Sua configuração através do `Caddyfile` é flexível e permite integrar facilmente com serviços de autenticação como o Authelia. Para mais detalhes sobre todas as diretivas e funcionalidades do Caddy, consulte a [documentação oficial do Caddy](https://caddyserver.com/docs/).
+Caddy é um componente central e poderoso desta pilha, simplificando o gerenciamento de reverse proxy e SSL/TLS. Para mais detalhes sobre todas as diretivas e funcionalidades do Caddy, consulte a [documentação oficial do Caddy](https://caddyserver.com/docs/).
 ```

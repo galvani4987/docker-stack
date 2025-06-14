@@ -149,9 +149,7 @@
     curl https://galvani4987.duckdns.org
     ```
 
-## Fase 2: Aplicações Web Principais \[✅\]
-
-*Implantação do n8n e Homer*
+## Fase 2: Automação (n8n) \[✅\]
 
 ### 2.A - Serviço n8n (Automação) \[✅\]
 
@@ -204,14 +202,15 @@
         condition: service_started
     ```
 
-  * \[✅\] Configurar proxy no `Caddyfile` (será feito na Fase 3.B após Authelia):
+  * \[✅\] Configurar proxy no `Caddyfile`:
 
   ```caddy
   n8n.galvani4987.duckdns.org {
-    reverse_proxy n8n:5678
-    # forward_auth http://authelia:9091 { # será adicionado após Authelia
-    #   uri /authelia
-    # }
+    reverse_proxy n8n:5678 {
+        header_up Host {host}
+        header_up X-Real-IP {remote} # {remote} is <ip>:<port>, {client_ip} is just <ip>
+        header_up X-Forwarded-Proto {scheme}
+    }
   }
   ```
 
@@ -224,164 +223,17 @@
   - Realizar o setup inicial do usuário administrador.
   - Testar a criação e execução de um workflow simples para confirmar funcionalidade.
 
-### 2.B - Serviço Homer (Dashboard Principal) \[✅\]
-
-* \[✅\] **2.B.1. Pesquisa:** Imagem oficial Homer, estrutura de configuração e como servir arquivos estáticos via Caddy.
-
-* \[✅\] **2.B.2. Configuração:**
-    * \[✅\] Consulte o [Tutorial de Instalação do Homer](docs/setup_homer.md) para um guia detalhado de configuração e implantação.
-  * \[✅\] Criar diretório `config/homer` e adicionar o arquivo `config.yml` (exemplo básico):
-
-  ```yaml
-  # config.yml para Homer
-  title: "Dashboard do Servidor"
-  subtitle: "Acesso aos serviços self-hosted"
-  logo: "assets/logo.png" # Crie um logo ou use um placeholder
-
-  links:
-    - name: n8n
-      icon: "fas fa-robot"
-      url: https://n8n.galvani4987.duckdns.org
-    # Adicione mais links aqui
-  ```
-
-  * \[ \] Adicionar serviço ao `docker-compose.yml`:
-
-  ```yaml
-  homer:
-    image: b4bz/homer:latest
-    container_name: homer
-    user: "1000:1000" # UID:GID do host para permissões de ./config/homer
-    volumes:
-      - ./config/homer:/www/assets
-    networks:
-      - app-network
-    restart: unless-stopped
-    environment:
-      - INIT_ASSETS=0 # Não reinicializar assets, pois config.yml é gerenciado
-  ```
-
-  * \[✅\] Configurar proxy no `Caddyfile` para o domínio raiz (será feito na Fase 3.B após Authelia):
-
-  ```caddy
-  galvani4987.duckdns.org {
-    # forward_auth http://authelia:9091 { # será adicionado após Authelia
-    #   uri /authelia
-    # }
-    reverse_proxy homer:8080
-  }
-  ```
-
-* \[✅\] **2.B.3. Implantação:**
-  - Adicionado ao `docker-compose.yml`. Use `docker compose up -d homer` para iniciar.
-* \[✅\] **2.B.4. Verificação:**
-  - Acessar `https://galvani4987.duckdns.org` (ou seu domínio raiz). Verificar logs com `docker compose logs homer`.
 ---
 
-## Fase 3: Segurança e Serviços Especializados \[✅\]
+## Fase 3: Gateway de WhatsApp (Waha) \[✅\]
 
-*Autenticação com Authelia e gateway Waha*
+*Configuração do gateway Waha*
 
-### 3.A - Serviço Redis (Dependência do Authelia) \[✅\]
+### 3.A - Serviço Waha (WhatsApp Gateway) \[✅\]
 
-* \[✅\] **3.A.1. Pesquisa:** Imagem Redis oficial (`redis:alpine`) e como configurar volumes para persistência.
+* \[✅\] **3.A.1. Pesquisa:** Imagem oficial Waha (`devlikeapro/waha:latest`), variáveis de ambiente para configuração (ex: `WAHA_DEBUG`, `WAHA_WEBHOOK_URL`, `WHATSAPP_API_KEY`).
 
 * \[✅\] **3.A.2. Configuração:**
-    * \[✅\] Consulte o [Tutorial de Instalação do Redis](docs/setup_redis.md) para um guia detalhado de configuração e implantação.
-  * \[✅\] Adicionar serviço ao `docker-compose.yml`:
-
-  ```yaml
-  redis:
-    image: redis:alpine
-    container_name: redis
-    restart: unless-stopped
-    command: redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
-    env_file:
-      - .env
-    volumes:
-      - redis_data:/data
-    networks:
-      - app-network
-  ```
-
-* \[✅\] **3.A.3. Implantação:**
-  - Adicionado ao `docker-compose.yml`. Use `docker compose up -d redis` para iniciar.
-* \[✅\] **3.A.4. Verificação:**
-  - Verificar logs com `docker compose logs redis`. Testar conexão (e.g., via Authelia quando este estiver online).
-
-### 3.B - Serviço Authelia (Portal de Autenticação) \[✅\]
-
-* \[✅\] **3.B.1. Pesquisa:** Documentação oficial do Authelia, configuração do `configuration.yml`, chaves para 2FA, e integração com Caddy via `forward_auth`.
-
-* \[✅\] **3.B.2. Configuração:**
-    * \[✅\] Consulte o [Tutorial de Instalação do Authelia](docs/setup_authelia.md) para um guia detalhado de configuração e implantação.
-  * \[✅\] Criar diretório `config/authelia` com `configuration.yml` e `users.yml`.
-  * \[✅\] Adicionar segredos ao `.env` (conforme `docs/setup_authelia.md`, incluindo `AUTHELIA_JWT_SECRET`, `AUTHELIA_SESSION_SECRET`, `AUTHELIA_STORAGE_ENCRYPTION_KEY`, etc.).
-
-  * \[✅\] Adicionar serviço ao `docker-compose.yml`:
-
-  ```yaml
-  authelia:
-    image: authelia/authelia:latest
-    container_name: authelia
-    restart: unless-stopped
-    env_file:
-      - .env # For all AUTHELIA_ variables
-    volumes:
-      - ./config/authelia:/config
-    networks:
-      - app-network
-    depends_on:
-      redis:
-        condition: service_started
-      postgres: # For notifications/audit log
-        condition: service_started
-  ```
-
-  * \[✅\] Configurar `forward_auth` no `Caddyfile` para os serviços protegidos (Homer, n8n, Waha, Cockpit) e o subdomínio do Authelia:
-
-  ```caddy
-  authelia.galvani4987.duckdns.org {
-    reverse_proxy authelia:9091
-  }
-
-  galvani4987.duckdns.org { # Homer
-    forward_auth authelia:9091 {
-        uri /api/verify?rd=https://authelia.galvani4987.duckdns.org/
-        copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
-    }
-    reverse_proxy homer:8080
-  }
-
-  n8n.galvani4987.duckdns.org {
-    forward_auth authelia:9091 {
-        uri /api/verify?rd=https://authelia.galvani4987.duckdns.org/
-        copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
-    }
-    reverse_proxy n8n:5678 # Headers específicos do n8n já no Caddyfile
-  }
-
-  cockpit.galvani4987.duckdns.org {
-    forward_auth authelia:9091 {
-        uri /api/verify?rd=https://authelia.galvani4987.duckdns.org/
-        copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
-    }
-    reverse_proxy host.docker.internal:9090 # Headers específicos do Cockpit já no Caddyfile
-  }
-
-  # waha.galvani4987.duckdns.org (será adicionado na próxima fase)
-  ```
-
-* \[✅\] **3.B.3. Implantação:**
-  - Adicionado ao `docker-compose.yml`. Use `docker compose up -d authelia` para iniciar (após Redis e Postgres).
-* \[✅\] **3.B.4. Verificação:**
-  - Verificar logs com `docker compose logs authelia`. Testar login no portal Authelia e acesso a uma rota protegida.
-
-### 3.C - Serviço Waha (WhatsApp Gateway) \[✅\]
-
-* \[✅\] **3.C.1. Pesquisa:** Imagem oficial Waha (`devlikeapro/waha:latest`), variáveis de ambiente para configuração (ex: `WAHA_DEBUG`, `WAHA_WEBHOOK_URL`, `WHATSAPP_API_KEY`).
-
-* \[✅\] **3.C.2. Configuração:**
     * \[✅\] Consulte o [Tutorial de Instalação do WAHA](docs/setup_waha.md) para um guia detalhado de configuração e implantação.
   * \[✅\] Adicionar variáveis ao `.env` (ex: `WAHA_DEBUG=false`, `WHATSAPP_HOOK_URL`, `WHATSAPP_API_KEY`, etc., conforme `docs/setup_waha.md`).
 
@@ -408,20 +260,17 @@
         max-file: "5"
   ```
 
-  * \[✅\] Configurar proxy no `Caddyfile` com autenticação:
+  * \[✅\] Configurar proxy no `Caddyfile`:
 
   ```caddy
   waha.galvani4987.duckdns.org {
-    forward_auth http://authelia:9091 {
-      uri /authelia
-    }
     reverse_proxy waha:3000
   }
   ```
 
-* \[✅\] **3.C.3. Implantação:**
+* \[✅\] **3.A.3. Implantação:**
   - Adicionado ao `docker-compose.yml`. Use `docker compose up -d waha` para iniciar. Configuração inicial (QR code) pode exigir expor a porta temporariamente.
-* \[✅\] **3.C.4. Verificação:**
+* \[✅\] **3.A.4. Verificação:**
   - Verificar logs com `docker compose logs waha`. Testar endpoints da API após autenticação e configuração da sessão do WhatsApp.
 
 ---
@@ -435,10 +284,10 @@
 * \[✅\] **4.2. Implantação:** - \[✅\] Instalação via `bootstrap.sh` (O script já inclui `apt-get install -y cockpit` e `systemctl enable --now cockpit.socket`).
 
 * \[✅\] **4.3. Verificação:**
-  - Acessar via proxy reverso em `https://cockpit.galvani4987.duckdns.org` (requer Authelia).
-  - Realizar login no Authelia e, em seguida, com as credenciais do usuário do servidor host.
+  - Acessar via proxy reverso em `https://cockpit.galvani4987.duckdns.org`.
+  - Realizar login com as credenciais do usuário do servidor host.
   - Verificar a interface do Cockpit e funcionalidades básicas (ex: visão geral do sistema, logs, terminal).
-  - O acesso direto via `https://<IP_DO_SERVIDOR>:9090` também pode ser usado para verificação (se o firewall do host permitir), contornando o proxy e Authelia.
+  - O acesso direto via `https://<IP_DO_SERVIDOR>:9090` também pode ser usado para verificação (se o firewall do host permitir), contornando o proxy.
 
 ## Fase 5: Finalização e Backup \[▶️]
 
@@ -452,11 +301,8 @@
 
     1.  **Dados Stateful:**
         *   **PostgreSQL (`postgres_data` volume):** Backup lógico utilizando `pg_dumpall` (ou `pg_dump` por banco) executado via `docker exec`. Isso garante um backup consistente do banco de dados. A restauração será feita via `psql`.
-        *   **Redis (`redis_data` volume):** Backup do arquivo RDB persistido pelo Redis. O Redis será configurado para salvar snapshots periodicamente. O volume contendo o arquivo RDB será arquivado.
         *   **n8n (`n8n_data` volume):** Backup completo do volume, que contém o banco de dados SQLite (padrão), arquivos de configuração e workflows.
         *   **Caddy (`caddy_data` e `caddy_config` volumes/mapeamentos):** Backup do volume `caddy_data` (contendo certificados ACME e outros dados operacionais) e do diretório de configuração `./config` (que inclui `Caddyfile` e é montado em `/etc/caddy`).
-        *   **Authelia (`./config/authelia` mapeamento):** Backup completo do diretório de configuração, que inclui `configuration.yml`, `users.yml`, e o banco de dados SQLite (se usado para auditoria/notificações, embora a configuração atual use Postgres para isso).
-        *   **Homer (`./config/homer` mapeamento):** Backup completo do diretório de configuração.
         *   **Waha (`./config/waha/sessions` e `./config/waha/media` mapeamentos):** Backup completo dos diretórios de sessões e mídias.
 
     2.  **Arquivos de Configuração do Projeto:**
@@ -516,18 +362,17 @@
     2.  **Simular Cenário de Perda de Dados/Desastre:**
         *   Parar todos os serviços (`docker compose down`).
         *   Remover/renomear volumes Docker importantes (e.g., `postgres_data`, `n8n_data`).
-        *   Remover/renomear diretórios de configuração mapeados (e.g., `./config/authelia`, `.env`).
+        *   Remover/renomear diretórios de configuração mapeados (e.g., `./config/caddy`, `.env`).
     3.  **Executar Restauração Completa:**
         *   Rodar o script `scripts/restore.sh`, apontando para o backup criado no passo 1.
     4.  **Verificação Pós-Restauração:**
         *   Confirmar que todos os serviços iniciam corretamente (`docker compose ps -a`).
         *   Verificar logs dos serviços para erros de inicialização ou corrupção.
-        *   Acessar as UIs dos serviços (Homer, n8n, Authelia, Cockpit, Waha) e verificar se os dados e configurações foram restaurados:
-            *   **PostgreSQL:** Checar dados em tabelas específicas (e.g., usuários n8n, configurações Authelia se armazenadas em DB).
+        *   Acessar as UIs dos serviços (n8n, Cockpit, Waha) e verificar se os dados e configurações foram restaurados:
+            *   **PostgreSQL:** Checar dados em tabelas específicas (e.g., usuários n8n).
             *   **n8n:** Verificar workflows, credenciais, execuções passadas.
-            *   **Authelia:** Verificar se usuários e regras de acesso funcionam.
             *   **Caddy:** Verificar se os certificados SSL estão corretos e os sites carregam.
-            *   **Homer/Waha/Redis:** Verificar suas configurações e dados específicos.
+            *   **Waha:** Verificar suas configurações e dados específicos.
         *   Testar funcionalidades chave de cada serviço.
     5.  **Documentar Resultados:**
         *   Registrar o sucesso ou falhas do teste, tempo de restauração, e quaisquer problemas encontrados. Ajustar scripts/procedimentos conforme necessário.
@@ -545,11 +390,8 @@ gantt
     Caddy                        :done,    des3, 2024-06-12, 4d
     section Fase 2
     n8n                          :active,  des4, 2024-06-13, 3d
-    Homer                        :         des5, after des4, 3d
     section Fase 3
-    Redis                        :         des6, after des5, 2d
-    Authelia                     :         des7, after des6, 5d
-    Waha                         :         des8, after des7, 3d
+    Waha                         :         des8, after des4, 3d
     section Fase 4
     Cockpit                      :active,  des9, after des8, 2d
     section Fase 5

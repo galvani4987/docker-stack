@@ -93,7 +93,7 @@ set +a # Stop automatically exporting variables
 
 # --- Stop Services ---
 log_message "INFO: Stopping application services to ensure data consistency..."
-SERVICES_TO_STOP="n8n waha authelia homer caddy" # Define services that don't need special handling like DBs for their dump
+SERVICES_TO_STOP="n8n waha caddy" # Define services that don't need special handling like DBs for their dump
 
 if docker compose -f "${DOCKER_COMPOSE_FILE}" stop ${SERVICES_TO_STOP}; then
     log_message "INFO: Successfully stopped services: ${SERVICES_TO_STOP}."
@@ -166,46 +166,10 @@ else
 fi
 
 
-# --- Backup Redis ---
-log_message "INFO: Starting Redis backup..."
-REDIS_SERVICE_NAME="redis"
-REDIS_VOLUME_NAME="${COMPOSE_PROJECT_NAME}_redis_data" # Assumes standard Docker Compose volume naming
-
-# Stop Redis to ensure RDB file is consistent if a save is in progress or just finished
-log_message "INFO: Stopping Redis service: ${REDIS_SERVICE_NAME}..."
-if docker compose -f "${DOCKER_COMPOSE_FILE}" stop "${REDIS_SERVICE_NAME}"; then
-    log_message "INFO: Successfully stopped Redis service."
-
-    # Get Redis data volume mount point
-    REDIS_VOLUME_MOUNTPOINT=$(docker volume inspect "${REDIS_VOLUME_NAME}" -f '{{ .Mountpoint }}' 2>/dev/null)
-
-    if [ -z "${REDIS_VOLUME_MOUNTPOINT}" ]; then
-        log_message "ERROR: Could not find mount point for Redis volume '${REDIS_VOLUME_NAME}'. Skipping Redis backup."
-    elif [ ! -d "${REDIS_VOLUME_MOUNTPOINT}" ]; then
-        log_message "ERROR: Redis volume mount point '${REDIS_VOLUME_MOUNTPOINT}' does not exist or is not a directory. Skipping Redis backup."
-    else
-        log_message "INFO: Found Redis volume mount point: ${REDIS_VOLUME_MOUNTPOINT}"
-        REDIS_BACKUP_FILENAME="redis_data.tar.gz" # Removed timestamp
-        REDIS_BACKUP_PATH="${CURRENT_BACKUP_DIR}/${REDIS_BACKUP_FILENAME}"
-
-        log_message "INFO: Archiving Redis data from ${REDIS_VOLUME_MOUNTPOINT} to ${REDIS_BACKUP_PATH}..."
-        # Backup the contents of the directory. The RDB file is usually dump.rdb
-        if tar -czvf "${REDIS_BACKUP_PATH}" -C "${REDIS_VOLUME_MOUNTPOINT}" dump.rdb; then
-            log_message "INFO: Redis data (dump.rdb) successfully archived to ${REDIS_BACKUP_PATH}."
-        else
-            log_message "ERROR: Failed to archive Redis data. 'dump.rdb' might not exist or an error occurred."
-        fi
-    fi
-else
-    log_message "ERROR: Failed to stop Redis service ${REDIS_SERVICE_NAME}. Skipping Redis backup."
-fi
-# Redis will be started later with other services in the service starting phase.
-
-
 # --- Backup Mapped Configuration Directories ---
 log_message "INFO: Starting backup of mapped configuration directories..."
 MAPPED_CONFIG_DIRS_PARENT="${PROJECT_ROOT_DIR}/config"
-MAPPED_CONFIG_SUBDIRS="authelia caddy homer waha" # Add other config subdirs if any
+MAPPED_CONFIG_SUBDIRS="caddy waha" # Add other config subdirs if any
 
 for subdir_name in ${MAPPED_CONFIG_SUBDIRS}; do
     source_path="${MAPPED_CONFIG_DIRS_PARENT}/${subdir_name}"
@@ -280,15 +244,6 @@ done
 
 # --- Start Services ---
 log_message "INFO: Starting services back up..."
-
-# Start Redis first, as it was stopped independently
-log_message "INFO: Starting Redis service..."
-if docker compose -f "${DOCKER_COMPOSE_FILE}" start redis; then
-    log_message "INFO: Successfully started Redis service."
-else
-    log_message "ERROR: Failed to start Redis service. Check Docker Compose logs."
-    # Potentially exit or notify, as this could affect other services like Authelia
-fi
 
 # Start other application services that were stopped
 # SERVICES_TO_STOP variable was defined in the "Stop Services" section
