@@ -23,13 +23,13 @@ N8N_DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD} # Reutiliza a variável do Postg
 
 # URL pública que o n8n usará para webhooks.
 # Certifique-se de que seu DNS para n8n.galvani4987.duckdns.org aponta para o IP do seu servidor.
-N8N_WEBHOOK_URL=https://n8n.galvani4987.duckdns.org/
+N8N_WEBHOOK_URL=https://n8n.{$DOMAIN_NAME}/ # Certifique-se de que {$DOMAIN_NAME} seja substituído pelo seu domínio real no arquivo .env
 
 # Recomendado para evitar problemas de permissão com o volume de dados do n8n.
-N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false
+N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false # Recomendado para false
 
 # Habilita a execução de sub-processos para certos nós (ex: Execute Command).
-N8N_RUNNERS_ENABLED=true
+N8N_RUNNERS_ENABLED=true # Recomendado para true
 
 # Chave de criptografia para dados sensíveis (credenciais).
 # Gere uma string aleatória segura de 32 caracteres. Por exemplo, no seu terminal:
@@ -58,7 +58,7 @@ services:
   # ... outros serviços como postgres e caddy ...
 
   n8n:
-    image: n8nio/n8n:latest  # Você pode fixar uma versão específica, ex: n8nio/n8n:1.97.1
+    image: n8nio/n8n:1.97.1  # Versão conforme docker-compose.yml
     container_name: n8n
     restart: unless-stopped
     env_file:

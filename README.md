@@ -15,6 +15,7 @@ Este ambiente opera com **Authentik como o provedor de identidade central e Cadd
 2. Ao tentar acessar um serviço, o usuário é redirecionado para o Authentik para login (se ainda não estiver logado).
 3. Após a autenticação bem-sucedida (que pode incluir Google OAuth), o usuário é redirecionado de volta ao serviço solicitado.
 4. O Authentik também serve como a página de destino principal do stack em `https://{$DOMAIN_NAME}`.
+O subdomínio `https://auth.{$DOMAIN_NAME}` (se configurado no DNS e Caddy) é frequentemente usado como um alias para o Authentik, especialmente para a configuração `AUTHENTIK_HOST` nos outposts ou para acesso administrativo direto, embora o acesso principal pelos usuários seja através de `https://{$DOMAIN_NAME}`.
 
 ## 🚀 Serviços da Stack
 
@@ -24,6 +25,7 @@ A pilha de serviços **inclui** os seguintes componentes:
     *   `authentik-server`: O serviço principal do Authentik.
     *   `authentik-worker`: Processos em segundo plano para o Authentik.
     *   `authentik-postgres`: Banco de dados dedicado para o Authentik.
+        - *Utiliza uma instância PostgreSQL dedicada (versão 15-alpine), separada da instância principal usada pelo n8n e outros serviços.*
     *   `authentik-redis`: Cache dedicado para o Authentik.
     *   `authentik_proxy_n8n`: Outpost do Authentik para proteger o n8n.
     *   `authentik_proxy_cockpit`: Outpost do Authentik para proteger o Cockpit.
