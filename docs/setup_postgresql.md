@@ -9,6 +9,7 @@ A configuração base do PostgreSQL já está definida nos arquivos `docker-comp
 O PostgreSQL é configurado para ser robusto e persistente, utilizando a imagem oficial do Docker e variáveis de ambiente para personalização inicial.
 
 *   **Imagem Docker:** `postgres:16-alpine` (uma versão específica do PostgreSQL 16 rodando em Alpine Linux para um tamanho de imagem reduzido).
+*   **Nota sobre Versões:** Esta documentação descreve primariamente a instância principal do PostgreSQL (serviço `postgres` no Docker Compose) que utiliza `postgres:16-alpine`. O Authentik possui sua própria instância de banco de dados (`authentik-postgres`) que utiliza `postgres:15-alpine`.*
 *   **Persistência de Dados:** Os dados do banco de dados são armazenados em um volume Docker nomeado para garantir que não sejam perdidos quando o container for reiniciado ou recriado.
 *   **Acesso:** O PostgreSQL não é exposto publicamente. Ele é acessível apenas por outros containers na mesma rede Docker interna (`app-network`).
 

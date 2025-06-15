@@ -17,7 +17,7 @@ services:
   # ... other services like caddy, postgres, n8n ...
 
   authentik-redis:
-    image: redis:8.0.2-alpine # Official Redis image, lightweight Alpine version
+    image: redis:8.0.2-alpine # Official Redis image, conforme docker-compose.yml
     restart: unless-stopped              # Ensures the service restarts automatically
     volumes:
       - authentik_redis:/data            # Mounts a Docker volume for data persistence

@@ -1,6 +1,6 @@
 # Roadmap de Implantação Detalhado
 
-**Estado Atual:** Todas as fases de implantação de serviços (Fase 0, 1, 2, 4, X) estão concluídas, com todos os serviços (PostgreSQL, Caddy, n8n, Cockpit, Authentik) operacionais. A Fase 5 (Backup) está com a configuração implementada, pendente apenas o teste completo de restore.
+**Estado Atual:** Todas as fases de implantação de serviços (Fase 0, 1, 2, 4, X) estão concluídas, com todos os serviços (PostgreSQL, Caddy, n8n, Cockpit, Authentik) operacionais. A Fase 5 (Backup) está com a configuração dos scripts implementada; no entanto, os testes completos de restauração ainda estão pendentes, e esta fase é considerada em andamento.
 
 **Última Atualização:** 17 de Julho de 2024
 
@@ -52,6 +52,7 @@
 
 * \[✅\] **1.A.2. Configuração:** 
     * \[✅\] Consulte o [Tutorial de Configuração do PostgreSQL](docs/setup_postgresql.md) para um guia detalhado da sua configuração neste projeto.
+    *Nota: A instância principal do PostgreSQL descrita aqui (para n8n, etc.) utiliza a imagem `postgres:16-alpine`. O Authentik utiliza uma instância PostgreSQL separada (`authentik-postgres`) com a imagem `postgres:15-alpine`.*
   * \[✅\] Variáveis adicionadas ao `.env`:
 
   ```env
@@ -262,7 +263,7 @@
     *   \[✅] Redirecionamento para aplicações após login bem-sucedido.
     *   \[✅] Logs do Authentik server, worker, e outposts verificados.
 
-## Fase 5: Finalização e Backup [✅]
+## Fase 5: Finalização e Backup [▶️]
 
 *Implementação de estratégia de backup*
 

@@ -1,12 +1,12 @@
 # Tutorial: Configurando o Caddy Reverse Proxy
 
-Este tutorial descreve a configuração do Caddy Web Server no projeto Docker Stack VPS. Caddy atua como o reverse proxy principal, gerenciando o tráfego SSL/TLS (HTTPS automático) para todos os serviços expostos publicamente e integrando-se com o Authelia para autenticação.
+Este tutorial descreve a configuração do Caddy Web Server no projeto Docker Stack VPS. Caddy atua como o reverse proxy principal, gerenciando o tráfego SSL/TLS (HTTPS automático) para todos os serviços expostos publicamente e integrando-se com o **Authentik** para autenticação (através dos outposts do Authentik).
 
 A configuração base do Caddy já está definida nos arquivos `docker-compose.yml` e `config/Caddyfile` do projeto, estabelecida durante a Fase 1.B do [ROADMAP.md](../../ROADMAP.md).
 
 ## 1. Visão Geral da Configuração do Caddy
 
-*   **Imagem Docker:** `caddy:alpine` (versão específica, ex: `caddy:2.10-alpine`, usando Alpine Linux para um tamanho reduzido).
+*   **Imagem Docker:** `caddy:2.10.0-alpine` (versão específica conforme `docker-compose.yml`, usando Alpine Linux para um tamanho reduzido).
 *   **Função Principal:** Servir como o ponto de entrada para todos os serviços web, fornecendo HTTPS automático e roteando o tráfego para os containers apropriados.
 *   **Configuração:** Gerenciada primariamente através do arquivo `Caddyfile`.
 *   **Persistência:** Volumes Docker são usados para persistir certificados TLS e outras configurações/dados do Caddy.
@@ -43,7 +43,7 @@ A definição do serviço `caddy` no arquivo `docker-compose.yml` é:
 ```yaml
 services:
   caddy:
-    image: caddy:alpine # Ou uma versão específica como caddy:2.10-alpine
+    image: caddy:2.10.0-alpine # Versão conforme docker-compose.yml
     container_name: caddy
     restart: unless-stopped
     ports:
